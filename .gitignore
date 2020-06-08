@@ -122,3 +122,10 @@ dmypy.json
 
 # Pyre type checker
 .pyre/
+
+# lex/yacc
+parser.out
+parsetab.py
+
+# custom
+diff.*
