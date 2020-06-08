@@ -9,10 +9,10 @@ class TestDiceParser(unittest.TestCase):
 			("d20", [20]),
 			("d8", [8]),
 			("D8", [8]),
-			("D0", [0]),
 		):
 			lexer.input(data)
 			for tok in lexer:
+				self.assertEqual(tok.type, "DIE", f'{data} produces incorrect token type of {tok.type}')
 				self.assertEqual(
 					tok.value['numSides'], expectedValues[0],
 					f"Token for {data} has {tok.value['numSides']} sides, but should have {expectedValues[0]} sides."
@@ -23,6 +23,8 @@ class TestDiceParser(unittest.TestCase):
 			("Hello world", "Hello world"),
 			("Hello D7 world", "Hello  world"),
 			('attacks for d20 then d8 damage.', 'attacks for  then  damage.'),
+			('d0', 'd0'),
+			('Tries a trivial D0 roll', 'Tries a trivial D0 roll'),
 		):
 			lexer.input(data)
 
