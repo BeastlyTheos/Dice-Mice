@@ -21,6 +21,10 @@ class TestDiceParser(unittest.TestCase):
 	def test_simpleDiceTokens_withPlaintext(self):
 		for data, expectedPlaintexts in (
 			("Hello world", "Hello world"),
+			("d20", ""),
+			("\t\td20", "\t\t"),
+			("d20 ", " "),
+			(" d20\t\t", " \t\t"),
 			("Hello D7 world", "Hello  world"),
 			('attacks for d20 then d8 damage.', 'attacks for  then  damage.'),
 			('d0', 'd0'),
