@@ -6,7 +6,12 @@
 
 from ply import lex
 
-tokens = ["DIE"]
+tokens = [
+	"DIE",
+	"PLAINTEXT",
+]
+
+t_PLAINTEXT = r'.'
 
 
 def t_DIE(t):
@@ -17,7 +22,7 @@ def t_DIE(t):
 
 
 def t_error(t):
-	print(f"Invalid Token: {t.value}")
+	print(f"Error tokenising starting at position {t.lexer.lexpos}. Remaining text is {t.value}")
 	t.lexer.skip(1)
 
 
