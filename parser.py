@@ -1,4 +1,4 @@
-import os
+from random import randint
 
 from ply import lex
 import ply.yacc as yacc
@@ -11,6 +11,7 @@ tokens = (
 	'LPAREN',
 	'RPAREN',
 	'NUMBER',
+	'DIE',
 )
 
 t_ignore = ' \t'
@@ -29,6 +30,12 @@ def t_NUMBER(t):
 	return t
 
 
+def t_DIE(t):
+	r'[dD]\d+'
+	t.value = int(t.value[1:])
+	return t
+
+
 def t_newline(t):
 	r'\n+'
 	t.lexer.lineno += len(t.value)
@@ -44,7 +51,8 @@ lexer = lex.lex()
 precedence = (
 	('left', 'PLUS', 'MINUS'),
 	('left', 'TIMES', 'DIV'),
-	('nonassoc', 'UMINUS')
+	('nonassoc', 'UMINUS'),
+	('nonassoc', 'DIE'),
 )
 
 
@@ -75,8 +83,20 @@ def p_mult_div(p):
 		p[0] = p[1] / p[3]
 
 
+def p_pDIE2DIE(p):
+	'pDIE : DIE'
+	p[0] = randint(1, p[1])
+	print(f"set die to {p[0]}")
+
+
+def p_expr2exprDIE(p):
+	'expr : expr pDIE %prec DIV'
+	p[0] = p[1] * p[2]
+
+
 def p_expr2NUM(p):
-	'expr : NUMBER'
+	'''expr : pDIE
+		| NUMBER'''
 	p[0] = p[1]
 
 
@@ -91,8 +111,9 @@ def p_error(p):
 
 parser = yacc.yacc()
 
-res = parser.parse("-4*-(3-5)")  # the input
+# res = parser.parse("-4*-(3-5)")  # the input
+res = parser.parse("2*-d8+d9")
 print(res)
 
-os.remove("parser.out")
-os.remove("parsetab.py")
+# os.remove("parser.out")
+# os.remove("parsetab.py")
