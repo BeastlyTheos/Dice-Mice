@@ -4,7 +4,8 @@
 # where the numbers inside the braces are results of a set of rolls
 # and the [hl] followed by a number indicates to keep as many highest or lowest rolls
 
-from ply import lex
+from ply import lex, yacc
+from random import randint
 
 tokens = [
 	"DIE",
@@ -27,3 +28,29 @@ def t_error(t):
 
 
 lexer = lex.lex()
+
+precedence = (
+	('left', 'expr'),
+)
+
+
+def p_expr2exprexpr(p):
+	'expr : expr expr %prec expr'
+	p[0] = p[1] + p[2]
+
+
+def p_expr2PLAINTEXT(p):
+	'''expr : PLAINTEXT'''
+	p[0] = p[1]
+
+
+def p_expr2DIE(p):
+	'expr : DIE'
+	p[0] = str(randint(1, p[1]['numSides']))
+
+
+def p_error(p):
+	print(f"Syntax error in input at {p}")
+
+
+parser = yacc.yacc()
