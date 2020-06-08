@@ -25,6 +25,8 @@ class TestDiceParser(unittest.TestCase):
 			('attacks for d20 then d8 damage.', 'attacks for  then  damage.'),
 			('d0', 'd0'),
 			('Tries a trivial D0 roll', 'Tries a trivial D0 roll'),
+			('mixes textandrollsd8d', 'mixes textandrollsd8d'),
+			('d4then anotherd20 d4roll', 'then anotherd20 roll'),
 		):
 			lexer.input(data)
 
