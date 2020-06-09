@@ -9,10 +9,22 @@ from random import randint
 
 tokens = [
 	"DIE",
+	"NUMBER",
 	"PLAINTEXT",
 ]
 
 t_PLAINTEXT = r'.'
+
+
+def t_NUMBER(t):
+	r'(?P<num>\d+(\.\d+)?)(?!\d*[Dd][1-9])'
+	m = t.lexer.lexmatch
+	val = m.group('num')
+	try:
+		t.value = int(val)
+	except ValueError:
+		t.value = float(val)
+	return t
 
 
 def t_DIE(t):
@@ -52,6 +64,13 @@ def p_expr2numeric(p):
 		p[0] = str(p[1]['result'])
 	else:
 		p[0] = f"{p[1]['text']} = {p[1]['result']}"
+
+
+def p_numeric2NUMBER(p):
+	'numeric : NUMBER'
+	result = p[1]
+	text = str(result)
+	p[0] = dict(text=text, result=result)
 
 
 def p_numeric2DIE(p):

@@ -8,7 +8,7 @@ from DiceParser import (
 )
 
 
-class TestDiceLexer(unittest.TestCase):
+class TestLexer(unittest.TestCase):
 	def test_diceTokens(self):
 		for data, numDice, numSides in (
 			("d20", 1, 20),
@@ -34,7 +34,7 @@ class TestDiceLexer(unittest.TestCase):
 			self.assertFalse(tok, f"When tokenising {data} multiple tokens were returned.")
 
 	def test_simpleDiceTokens_withPlaintext(self):
-		for data, expectedPlaintexts in (
+		for data, expectedPlaintext in (
 			("Hello world", "Hello world"),
 			("d20", ""),
 			("\t\td20", "\t\t"),
@@ -49,15 +49,27 @@ class TestDiceLexer(unittest.TestCase):
 		):
 			lexer.input(data)
 
-			i = 0
+			plaintext = ''
 			for tok in lexer:
-				if tok.type != "PLAINTEXT":
+				if tok.type == "DIE":
 					continue
-				self.assertEqual(
-					tok.value, expectedPlaintexts[i],
-					f"from string {data}, the {i}th plaintext token is {tok.value}. Expecting {expectedPlaintexts[i]}"
-				)
-				i += 1
+				plaintext += str(tok.value)
+			self.assertEqual(plaintext, expectedPlaintext)
+
+	def test_numericTokens(self):
+		for text, value, type in (
+			('0', 0, 'NUMBER'),
+			('4', 4, 'NUMBER'),
+			('92', 92, 'NUMBER'),
+			('00', 0, 'NUMBER'),
+			('04', 4, 'NUMBER'),
+			('8.4', 8.4, 'NUMBER'),
+			('9.223', 9.223, 'NUMBER'),
+		):
+			lexer.input(text)
+			tok = lexer.token()
+			self.assertEqual(tok.type, type, f"text is `{text}`")
+			self.assertEqual(tok.value, value, f"text is `{text}`")
 
 
 class TestDiceParser(unittest.TestCase):
