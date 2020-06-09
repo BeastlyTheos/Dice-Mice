@@ -69,21 +69,21 @@ class TestDiceParser(unittest.TestCase):
 
 	def test_simpleDiceParsing_withPlaintext(self):
 		for data, expectedRegexp in (
-			("Hello world", "Hello world"),
-			("d20", "(20|10|[1-9]?[1-9])"),
-			(" d20", " (20|10|[1-9]?[1-9])"),
-			("d20 ", "(20|10|[1-9]?[1-9]) "),
-			(" d20 ", " (20|10|[1-9]?[1-9]) "),
-			("Hello D7 world", "Hello [1-7] world"),
-			('attacks for d20 then d8 damage.', 'attacks for (20|10|[1-9]?[1-9]) then [1-8] damage.'),
-			('d0', 'd0'),
-			('Tries a trivial D0 roll', 'Tries a trivial D0 roll'),
-			('mixes textandrollsd8d', 'mixes textandrollsd8d'),
-			('d4then anotherd20 d4roll', '[1-4]then anotherd20 [1-4]roll'),
+			('Hello world', r'Hello world'),
+			('d20', r'\d{1,2}'),
+			(' d20', r' \d{1,2}'),
+			('d20 ', r'\d{1,2} '),
+			(' d20 ', r' \d{1,2} '),
+			('Hello D7 world', r'Hello \d world'),
+			('attacks for d20 then d8 damage.', r'attacks for \d{1,2} then \d damage.'),
+			('d0', r'd0'),
+			('Tries a trivial D0 roll', r'Tries a trivial D0 roll'),
+			('mixes textandrollsd8d', r'mixes textandrollsd8d'),
+			('d4then anotherd20 d4roll', r'\dthen anotherd20 \droll'),
 		):
 			res = parser.parse(data)
-			self.assertTrue(res, f"failed to parse `{data}`")
+			self.assertTrue(res, f'failed to parse `{data}`')
 			self.assertTrue(
 				re.match(expectedRegexp, res),
-				f"The data {data} was parsed into `{res}`, which does not match `{expectedRegexp}`"
+				f'The data {data} was parsed into `{res}`, which does not match `{expectedRegexp}`'
 			)
