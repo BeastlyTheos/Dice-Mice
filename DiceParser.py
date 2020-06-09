@@ -16,8 +16,9 @@ t_PLAINTEXT = r'.'
 
 
 def t_DIE(t):
-	r'(?<!\w)[Dd](?P<numSides>[1-9]\d*)'
+	r'(?<!\w)(?P<numDice>\d+)?[Dd](?P<numSides>[1-9]\d*)'
 	t.value = t.lexer.lexmatch.groupdict()
+	t.value['numDice'] = int(t.value['numDice']) if t.value['numDice'] else 1
 	t.value['numSides'] = int(t.value['numSides'])
 	return t
 

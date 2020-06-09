@@ -5,19 +5,29 @@ from DiceParser import lexer, parser
 
 
 class TestDiceLexer(unittest.TestCase):
-	def test_simpleDiceTokens(self):
-		for data, expectedValues in (
-			("d20", [20]),
-			("d8", [8]),
-			("D8", [8]),
+	def test_diceTokens(self):
+		for data, numDice, numSides in (
+			("d20", 1, 20),
+			("d8", 1, 8),
+			("D8", 1, 8),
+			("2d20", 2, 20),
+			("9d8", 9, 8),
+			("10D8", 10, 8),
+			("0d10", 0, 10),
 		):
 			lexer.input(data)
-			for tok in lexer:
-				self.assertEqual(tok.type, "DIE", f'{data} produces incorrect token type of {tok.type}')
-				self.assertEqual(
-					tok.value['numSides'], expectedValues[0],
-					f"Token for {data} has {tok.value['numSides']} sides, but should have {expectedValues[0]} sides."
-				)
+			tok = lexer.token()
+			self.assertEqual(tok.type, "DIE", f'{data} produces incorrect token type of {tok.type}')
+			self.assertEqual(
+				tok.value['numDice'], numDice,
+				f"Token for {data} has {tok.value['numDice']} dice, but should have {numDice} dice."
+			)
+			self.assertEqual(
+				tok.value['numSides'], numSides,
+				f"Token for {data} has {tok.value['numSides']} sides, but should have {numSides} sides."
+			)
+			tok = lexer.token()
+			self.assertFalse(tok, f"When tokenising {data} multiple tokens were returned.")
 
 	def test_simpleDiceTokens_withPlaintext(self):
 		for data, expectedPlaintexts in (
