@@ -1,7 +1,10 @@
 import re
 import unittest
 
-from DiceParser import lexer, parser
+from DiceParser import (
+	lexer, parser,
+	p_expr2DIE,
+)
 
 
 class TestDiceLexer(unittest.TestCase):
@@ -87,3 +90,17 @@ class TestDiceParser(unittest.TestCase):
 				re.match(expectedRegexp, res),
 				f'The data {data} was parsed into `{res}`, which does not match `{expectedRegexp}`'
 			)
+
+
+class TestParseFunctions(unittest.TestCase):
+	def test_exp2DIE(self):
+		for token in (
+			dict(numSides=20),
+			dict(numSides=8),
+			dict(numSides=2),
+			dict(numSides=1),
+		):
+			p = [32, token]
+			p_expr2DIE(p)
+			res = int(p[0])
+			self.assertTrue(1 <= res <= token['numSides'], f"The token {token} produced {res}.")
