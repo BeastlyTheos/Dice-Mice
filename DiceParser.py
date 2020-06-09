@@ -48,7 +48,7 @@ def p_expr2PLAINTEXT(p):
 def p_expr2numeric(p):
 	'expr : numeric'
 	text = p[1]['text']
-	if text[1:-1].isdigit:
+	if ',' not in text:
 		p[0] = str(p[1]['result'])
 	else:
 		p[0] = f"{p[1]['text']} = {p[1]['result']}"

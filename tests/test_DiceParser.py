@@ -3,6 +3,7 @@ import unittest
 
 from DiceParser import (
 	lexer, parser,
+	p_expr2numeric,
 	p_numeric2DIE,
 )
 
@@ -60,7 +61,7 @@ class TestDiceLexer(unittest.TestCase):
 
 
 class TestDiceParser(unittest.TestCase):
-	def test_simpleDiceParsing(self):
+	def test_DiceParsing(self):
 		for data, expectedValues in (
 			("d20", 20),
 			("d8", [8]),
@@ -70,7 +71,7 @@ class TestDiceParser(unittest.TestCase):
 			numSides = int(data[1:])
 			self.assertTrue(1 <= int(res) <= numSides)
 
-	def test_simpleDiceParsing_withPlaintext(self):
+	def test_diceParsing_withPlaintext(self):
 		for data, expectedRegexp in (
 			('Hello world', r'Hello world'),
 			('d20', r'\d{1,2}'),
@@ -83,13 +84,17 @@ class TestDiceParser(unittest.TestCase):
 			('Tries a trivial D0 roll', r'Tries a trivial D0 roll'),
 			('mixes textandrollsd8d', r'mixes textandrollsd8d'),
 			('d4then anotherd20 d4roll', r'\dthen anotherd20 \droll'),
+			('2d20', r'\[\d{1,2}, \d{1,2}\] = \d{1,2}'),
+			(' 49d20 ', r' \[\d{1,2}(, \d{1,2}){48}\] = \d{1,3} '),
+			('attacks for 0d20 then 1d8 damage.', r'attacks for 0 then \d damage.'),
+			('0d0', r'0d0'),
 		):
 			res = parser.parse(data)
 			self.assertTrue(res, f'failed to parse `{data}`')
 			self.assertEqual(type(res), str)
 			self.assertTrue(
 				re.match(expectedRegexp, res),
-				f'The data {data} was parsed into `{res}`, which does not match `{expectedRegexp}`'
+				f'The data `{data}` was parsed into `{res}`, which does not match the regexp `{expectedRegexp}`'
 			)
 
 
@@ -119,3 +124,20 @@ class TestParseFunctions(unittest.TestCase):
 			min = token['numDice']
 			max = token['numDice'] * token['numSides']
 			self.assertTrue(min <= res <= max, f"The token {token} produced {res}.")
+
+	def test_expr2numeric(self):
+		for token, expectedOutput in (
+			(dict(result=17, text='17'), '17'),
+			(dict(result=5, text='5'), '5'),
+			(dict(result=2, text='2'), '2'),
+			(dict(result=1, text='1'), '1'),
+			(dict(result=37, text='[19, 18]'), '[19, 18] = 37'),
+			(dict(result=106, text='[8, 17, 3, 15, 10, 11, 5, 9, 19]'), '[8, 17, 3, 15, 10, 11, 5, 9, 19] = 106'),
+			(dict(result=0, text='[]'), '0'),
+		):
+			p = [None, token]
+			p_expr2numeric(p)
+			self.assertEqual(
+				p[0], expectedOutput,
+				f"The token {token} produced `{p[0]}`, but was expecting ``{expectedOutput}`."
+			)

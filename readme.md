@@ -14,8 +14,8 @@ and the inclusion number specifies the number of the highest or lowest dice to i
 - parser parses single-die results without extra text
 - parser handles extra text
 - lexer rolls multiple dice at once
-parser parses multiple dice at once
-parser shows the sum of multi-die rolls
+- parser parses multiple dice at once
+- parser shows the sum of multi-die rolls
 when dice rolls are embedded in a mathematical expression, parser evaluates the entire expression
 test it is thread safe
 implement in bot code
