@@ -45,9 +45,22 @@ def p_expr2PLAINTEXT(p):
 	p[0] = p[1]
 
 
-def p_expr2DIE(p):
-	'expr : DIE'
-	p[0] = str(randint(1, p[1]['numSides']))
+def p_expr2numeric(p):
+	'expr : numeric'
+	text = p[1]['text']
+	if text[1:-1].isdigit:
+		p[0] = str(p[1]['result'])
+	else:
+		p[0] = f"{p[1]['text']} = {p[1]['result']}"
+
+
+def p_numeric2DIE(p):
+	'numeric : DIE'
+	tok = p[1]
+	rolls = [randint(1, tok['numSides']) for i in range(tok['numDice'])]
+	result = sum(rolls)
+	text = str(rolls)
+	p[0] = dict(result=result, text=text)
 
 
 def p_error(p):

@@ -3,7 +3,7 @@ import unittest
 
 from DiceParser import (
 	lexer, parser,
-	p_expr2DIE,
+	p_numeric2DIE,
 )
 
 
@@ -86,6 +86,7 @@ class TestDiceParser(unittest.TestCase):
 		):
 			res = parser.parse(data)
 			self.assertTrue(res, f'failed to parse `{data}`')
+			self.assertEqual(type(res), str)
 			self.assertTrue(
 				re.match(expectedRegexp, res),
 				f'The data {data} was parsed into `{res}`, which does not match `{expectedRegexp}`'
@@ -93,14 +94,28 @@ class TestDiceParser(unittest.TestCase):
 
 
 class TestParseFunctions(unittest.TestCase):
-	def test_exp2DIE(self):
+	def test_numeric2DIE(self):
 		for token in (
-			dict(numSides=20),
-			dict(numSides=8),
-			dict(numSides=2),
-			dict(numSides=1),
+			dict(numDice=1, numSides=20),
+			dict(numDice=1, numSides=8),
+			dict(numDice=1, numSides=2),
+			dict(numDice=1, numSides=1),
+			dict(numDice=2, numSides=20),
+			dict(numDice=2, numSides=8),
+			dict(numDice=2, numSides=2),
+			dict(numDice=2, numSides=1),
+			dict(numDice=12, numSides=20),
+			dict(numDice=12, numSides=8),
+			dict(numDice=12, numSides=2),
+			dict(numDice=12, numSides=1),
+			dict(numDice=0, numSides=20),
+			dict(numDice=0, numSides=8),
+			dict(numDice=0, numSides=2),
+			dict(numDice=0, numSides=1),
 		):
-			p = [32, token]
-			p_expr2DIE(p)
-			res = int(p[0])
-			self.assertTrue(1 <= res <= token['numSides'], f"The token {token} produced {res}.")
+			p = [None, token]
+			p_numeric2DIE(p)
+			res = int(p[0]['result'])
+			min = token['numDice']
+			max = token['numDice'] * token['numSides']
+			self.assertTrue(min <= res <= max, f"The token {token} produced {res}.")
