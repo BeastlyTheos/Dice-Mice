@@ -5,6 +5,7 @@ from DiceParser import (
 	lexer, parser,
 	p_expr2numeric,
 	p_numeric2DIE,
+	p_numeric2PLUS,
 )
 
 
@@ -65,6 +66,9 @@ class TestLexer(unittest.TestCase):
 			('04', 4, 'NUMBER'),
 			('8.4', 8.4, 'NUMBER'),
 			('9.223', 9.223, 'NUMBER'),
+			('+', '+', 'PLUS'),
+			(' +', ' +', 'PLUS'),
+			(' +\t', ' +\t', 'PLUS'),
 		):
 			lexer.input(text)
 			tok = lexer.token()
@@ -98,8 +102,11 @@ class TestDiceParser(unittest.TestCase):
 			('d4then anotherd20 d4roll', r'\dthen anotherd20 \droll'),
 			('2d20', r'\[\d{1,2}, \d{1,2}\] = \d{1,2}'),
 			(' 49d20 ', r' \[\d{1,2}(, \d{1,2}){48}\] = \d{1,3} '),
-			('attacks for 0d20 then 1d8 damage.', r'attacks for 0 then \d damage.'),
+			('attacks for 0d20 then 1d8 damage.', r'attacks for \[] then \d damage.'),
 			('0d0', r'0d0'),
+			('1+1', r'1\+1 = 2'),
+			('\t2+8', r'\t2\+8 = 10'),
+			('98 +42+ 38', r'98 \+42\+ 38 = 178'),
 		):
 			res = parser.parse(data)
 			self.assertTrue(res, f'failed to parse `{data}`')
@@ -145,7 +152,8 @@ class TestParseFunctions(unittest.TestCase):
 			(dict(result=1, text='1'), '1'),
 			(dict(result=37, text='[19, 18]'), '[19, 18] = 37'),
 			(dict(result=106, text='[8, 17, 3, 15, 10, 11, 5, 9, 19]'), '[8, 17, 3, 15, 10, 11, 5, 9, 19] = 106'),
-			(dict(result=0, text='[]'), '0'),
+			(dict(result=0, text='[]'), '[]'),
+			(dict(text='1+1', result=2), '1+1 = 2')
 		):
 			p = [None, token]
 			p_expr2numeric(p)
@@ -153,3 +161,21 @@ class TestParseFunctions(unittest.TestCase):
 				p[0], expectedOutput,
 				f"The token {token} produced `{p[0]}`, but was expecting ``{expectedOutput}`."
 			)
+
+	def test_numeric2PLUS(self):
+		for prev, cur, next in (
+			(
+				dict(text='1', result=1),
+				'+',
+				dict(text='1', result=1),
+			),
+			(
+				dict(text=' 94.5\t', result=94.5),
+				'  +',
+				dict(text='-3 ', result=-3),
+			),
+		):
+			p = [None, prev, cur, next]
+			p_numeric2PLUS(p)
+			self.assertEqual(p[0]['result'], prev['result'] + next['result'])
+			self.assertEqual(p[0]['text'], prev['text'] + cur + next['text'])

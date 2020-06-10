@@ -18,7 +18,7 @@ and the inclusion number specifies the number of the highest or lowest dice to i
 - parser shows the sum of multi-die rolls
 
 when dice rolls are embedded in a mathematical expression, parser evaluates the entire expression
-start with addition
+- start with addition
 then subtraction
 then leave the other operations until later
 

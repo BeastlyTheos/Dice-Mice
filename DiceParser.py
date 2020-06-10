@@ -11,9 +11,11 @@ tokens = [
 	"DIE",
 	"NUMBER",
 	"PLAINTEXT",
+	"PLUS",
 ]
 
 t_PLAINTEXT = r'.'
+t_PLUS = r'\s*\+\s*'
 
 
 def t_NUMBER(t):
@@ -60,10 +62,17 @@ def p_expr2PLAINTEXT(p):
 def p_expr2numeric(p):
 	'expr : numeric'
 	text = p[1]['text']
-	if ',' not in text:
-		p[0] = str(p[1]['result'])
+	if text.isdigit() or text == '[]':
+		p[0] = text
 	else:
 		p[0] = f"{p[1]['text']} = {p[1]['result']}"
+
+
+def p_numeric2PLUS(p):
+	'numeric : numeric PLUS numeric'
+	text = p[1]['text'] + p[2] + p[3]['text']
+	result = p[1]['result'] + p[3]['result']
+	p[0] = dict(text=text, result=result)
 
 
 def p_numeric2NUMBER(p):
@@ -78,7 +87,7 @@ def p_numeric2DIE(p):
 	tok = p[1]
 	rolls = [randint(1, tok['numSides']) for i in range(tok['numDice'])]
 	result = sum(rolls)
-	text = str(rolls)
+	text = str(rolls[0]) if len(rolls) == 1 else str(rolls)
 	p[0] = dict(result=result, text=text)
 
 
