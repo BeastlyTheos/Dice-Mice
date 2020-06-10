@@ -1,7 +1,12 @@
 import os
+import re
+
 
 import discord
 from dotenv import load_dotenv
+
+from DiceParser import parser, t_DIE
+diceRegexp = re.compile(t_DIE.__doc__)
 
 load_dotenv()
 TOKEN = os.getenv("DISCORD_TOKEN")
@@ -20,7 +25,9 @@ async def on_message(msg):
 	if msg.author == client.user:
 		print(f"client just said {msg.content}")
 		return
-
-	await msg.channel.send(f"You just said {msg.content}")
+	if not diceRegexp.search(msg.content):
+		return
+	res = parser.parse(msg.content)
+	await msg.channel.send(f"You just said {res}")
 
 client.run(TOKEN)
