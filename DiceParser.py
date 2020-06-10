@@ -11,11 +11,13 @@ tokens = [
 	"PLAINTEXT",
 	"NUMBER",
 	"PLUS",
+	"MINUS",
 	"DIE",
 ]
 
 t_PLAINTEXT = r'.'
 t_PLUS = r'\s*\+\s*'
+t_MINUS = r'\s*-\s*'
 
 
 def t_NUMBER(t):
@@ -46,6 +48,9 @@ lexer = lex.lex()
 
 precedence = (
 	('left', 'expr'),
+	('left', 'PLAINTEXT'),
+	('left', 'numeric'),
+	('left', 'PLUS', 'MINUS'),
 )
 
 
@@ -55,12 +60,14 @@ def p_expr2exprexpr(p):
 
 
 def p_expr2PLAINTEXT(p):
-	'''expr : PLAINTEXT'''
+	'''expr : PLAINTEXT
+	| PLUS
+	| MINUS'''
 	p[0] = p[1]
 
 
 def p_expr2numeric(p):
-	'expr : numeric'
+	'expr : numeric %prec numeric'
 	text = p[1]['text']
 	if text.isdigit() or text == '[]':
 		p[0] = text
@@ -68,8 +75,11 @@ def p_expr2numeric(p):
 		p[0] = f"{p[1]['text']} = {p[1]['result']}"
 
 
-def p_numeric2PLUS(p):
-	'numeric : numeric PLUS numeric'
+def p_numeric2PLUSMINUS(p):
+	'''numeric : numeric PLUS numeric
+	| numeric MINUS numeric'''
+	if '-' in p[2]:
+		p[3]['result'] *= -1
 	text = p[1]['text'] + p[2] + p[3]['text']
 	result = p[1]['result'] + p[3]['result']
 	p[0] = dict(text=text, result=result)

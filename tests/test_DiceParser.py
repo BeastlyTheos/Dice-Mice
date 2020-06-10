@@ -5,7 +5,7 @@ from DiceParser import (
 	lexer, parser,
 	p_expr2numeric,
 	p_numeric2DIE,
-	p_numeric2PLUS,
+	p_numeric2PLUSMINUS,
 )
 
 
@@ -47,6 +47,8 @@ class TestLexer(unittest.TestCase):
 			('Tries a trivial D0 roll', 'Tries a trivial D0 roll'),
 			('mixes textandrollsd8d', 'mixes textandrollsd8d'),
 			('d4then anotherd20 d4roll', 'then anotherd20 roll'),
+			('trying to negate a roll -d4', 'trying to negate a roll -'),
+			('trying to roll a negative number of times -2d8.', 'trying to roll a negative number of times -.'),
 		):
 			lexer.input(data)
 
@@ -69,6 +71,9 @@ class TestLexer(unittest.TestCase):
 			('+', '+', 'PLUS'),
 			(' +', ' +', 'PLUS'),
 			(' +\t', ' +\t', 'PLUS'),
+			('-', '-', 'MINUS'),
+			(' - ', ' - ', 'MINUS'),
+			(' -', ' -', 'MINUS'),
 		):
 			lexer.input(text)
 			tok = lexer.token()
@@ -107,13 +112,24 @@ class TestDiceParser(unittest.TestCase):
 			('1+1', r'1\+1 = 2'),
 			('\t2+8', r'\t2\+8 = 10'),
 			('98 +42+ 38', r'98 \+42\+ 38 = 178'),
+			('1-1', '1-1 = 0'),
+			('4 -9', '4 -9 = -5'),
+			(' 18- 3', ' 18- 3 = 15'),
+			('modify then subtract a roll 9-d8', r'modify then subtract a roll 9-\d = \d'),
+			('modify then subtract a roll 2-3d8', r'modify then subtract a roll 2-\[\d, \d, \d] = -\d{1,2}'),
+			('stand-alone dash', 'stand-alone dash'),
+			('ctrl+alt-delete', r'ctrl\+alt-delete'),
+			('trying to ne+gate -a roll -d4', r'trying to ne\+gate -a roll -\d'),
+			('rolling a negative number of times -2d8.', r'rolling a negative number of times -\[\d, \d] = \d{1,2}.'),
+			('4+8-3', r'4\+8-3 = 9'),
+			('4-8+3', r'4-8\+3 = -1'),
 		):
 			res = parser.parse(data)
 			self.assertTrue(res, f'failed to parse `{data}`')
 			self.assertEqual(type(res), str)
 			self.assertTrue(
 				re.match(expectedRegexp, res),
-				f'The data `{data}` was parsed into `{res}`, which does not match the regexp `{expectedRegexp}`'
+				f'The data `{data}` was parsed into\n`{res}`,\nwhich does not match the regexp\n`{expectedRegexp}`'
 			)
 
 
@@ -127,7 +143,10 @@ class TestParseFunctions(unittest.TestCase):
 			(dict(result=37, text='[19, 18]'), '[19, 18] = 37'),
 			(dict(result=106, text='[8, 17, 3, 15, 10, 11, 5, 9, 19]'), '[8, 17, 3, 15, 10, 11, 5, 9, 19] = 106'),
 			(dict(result=0, text='[]'), '[]'),
-			(dict(text='1+1', result=2), '1+1 = 2')
+			(dict(text='1+1', result=2), '1+1 = 2'),
+			(dict(text='1-1', result=0), '1-1 = 0'),
+			(dict(text='19- 5', result=14), '19- 5 = 14'),
+			(dict(text='1- 4', result=-3), '1- 4 = -3'),
 		):
 			p = [None, token]
 			p_expr2numeric(p)
@@ -136,7 +155,7 @@ class TestParseFunctions(unittest.TestCase):
 				f"The token {token} produced `{p[0]}`, but was expecting `{expectedOutput}`."
 			)
 
-	def test_numeric2PLUS(self):
+	def test_numeric2PLUSMINUS(self):
 		for prev, cur, next in (
 			(
 				dict(text='1', result=1),
@@ -148,9 +167,15 @@ class TestParseFunctions(unittest.TestCase):
 				'  +',
 				dict(text='-3 ', result=-3),
 			),
+			(
+				dict(text='[11, 5]', result=16),
+				' -',
+				dict(text='3', result=3),
+			),
+
 		):
 			p = [None, prev, cur, next]
-			p_numeric2PLUS(p)
+			p_numeric2PLUSMINUS(p)
 			self.assertEqual(p[0]['result'], prev['result'] + next['result'])
 			self.assertEqual(p[0]['text'], prev['text'] + cur + next['text'])
 
