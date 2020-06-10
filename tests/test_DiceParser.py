@@ -10,7 +10,7 @@ from DiceParser import (
 
 
 class TestLexer(unittest.TestCase):
-	def test_diceTokens(self):
+	def test_diceTokenising(self):
 		for data, numDice, numSides in (
 			("d20", 1, 20),
 			("d8", 1, 8),
@@ -34,7 +34,7 @@ class TestLexer(unittest.TestCase):
 			tok = lexer.token()
 			self.assertFalse(tok, f"When tokenising {data} multiple tokens were returned.")
 
-	def test_simpleDiceTokens_withPlaintext(self):
+	def test_diceTokenising_excludesNonDiceText(self):
 		for data, expectedPlaintext in (
 			("Hello world", "Hello world"),
 			("d20", ""),
@@ -87,7 +87,7 @@ class TestDiceParser(unittest.TestCase):
 			numSides = int(data[1:])
 			self.assertTrue(1 <= int(res) <= numSides)
 
-	def test_diceParsing_withPlaintext(self):
+	def test_parsing_matchesDesiredRegexp(self):
 		for data, expectedRegexp in (
 			('Hello world', r'Hello world'),
 			('d20', r'\d{1,2}'),
@@ -118,6 +118,42 @@ class TestDiceParser(unittest.TestCase):
 
 
 class TestParseFunctions(unittest.TestCase):
+	def test_expr2numeric(self):
+		for token, expectedOutput in (
+			(dict(result=17, text='17'), '17'),
+			(dict(result=5, text='5'), '5'),
+			(dict(result=2, text='2'), '2'),
+			(dict(result=1, text='1'), '1'),
+			(dict(result=37, text='[19, 18]'), '[19, 18] = 37'),
+			(dict(result=106, text='[8, 17, 3, 15, 10, 11, 5, 9, 19]'), '[8, 17, 3, 15, 10, 11, 5, 9, 19] = 106'),
+			(dict(result=0, text='[]'), '[]'),
+			(dict(text='1+1', result=2), '1+1 = 2')
+		):
+			p = [None, token]
+			p_expr2numeric(p)
+			self.assertEqual(
+				p[0], expectedOutput,
+				f"The token {token} produced `{p[0]}`, but was expecting `{expectedOutput}`."
+			)
+
+	def test_numeric2PLUS(self):
+		for prev, cur, next in (
+			(
+				dict(text='1', result=1),
+				'+',
+				dict(text='1', result=1),
+			),
+			(
+				dict(text=' 94.5\t', result=94.5),
+				'  +',
+				dict(text='-3 ', result=-3),
+			),
+		):
+			p = [None, prev, cur, next]
+			p_numeric2PLUS(p)
+			self.assertEqual(p[0]['result'], prev['result'] + next['result'])
+			self.assertEqual(p[0]['text'], prev['text'] + cur + next['text'])
+
 	def test_numeric2DIE(self):
 		for token in (
 			dict(numDice=1, numSides=20),
@@ -143,39 +179,3 @@ class TestParseFunctions(unittest.TestCase):
 			min = token['numDice']
 			max = token['numDice'] * token['numSides']
 			self.assertTrue(min <= res <= max, f"The token {token} produced {res}.")
-
-	def test_expr2numeric(self):
-		for token, expectedOutput in (
-			(dict(result=17, text='17'), '17'),
-			(dict(result=5, text='5'), '5'),
-			(dict(result=2, text='2'), '2'),
-			(dict(result=1, text='1'), '1'),
-			(dict(result=37, text='[19, 18]'), '[19, 18] = 37'),
-			(dict(result=106, text='[8, 17, 3, 15, 10, 11, 5, 9, 19]'), '[8, 17, 3, 15, 10, 11, 5, 9, 19] = 106'),
-			(dict(result=0, text='[]'), '[]'),
-			(dict(text='1+1', result=2), '1+1 = 2')
-		):
-			p = [None, token]
-			p_expr2numeric(p)
-			self.assertEqual(
-				p[0], expectedOutput,
-				f"The token {token} produced `{p[0]}`, but was expecting ``{expectedOutput}`."
-			)
-
-	def test_numeric2PLUS(self):
-		for prev, cur, next in (
-			(
-				dict(text='1', result=1),
-				'+',
-				dict(text='1', result=1),
-			),
-			(
-				dict(text=' 94.5\t', result=94.5),
-				'  +',
-				dict(text='-3 ', result=-3),
-			),
-		):
-			p = [None, prev, cur, next]
-			p_numeric2PLUS(p)
-			self.assertEqual(p[0]['result'], prev['result'] + next['result'])
-			self.assertEqual(p[0]['text'], prev['text'] + cur + next['text'])

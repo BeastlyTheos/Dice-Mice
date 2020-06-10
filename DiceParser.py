@@ -8,10 +8,10 @@ from ply import lex, yacc
 from random import randint
 
 tokens = [
-	"DIE",
-	"NUMBER",
 	"PLAINTEXT",
+	"NUMBER",
 	"PLUS",
+	"DIE",
 ]
 
 t_PLAINTEXT = r'.'
