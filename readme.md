@@ -1,27 +1,36 @@
-modules include:
-bot code, which executes the main body of the program
-DiceParser that extracts dice codes and rolls them, formatting them in roll codes with an evaluated result
-EG: parsing the text "deals 2d8+4 damage" might output something like, "deals {5, 3}+4 = 12 damage".
-dice codes have the format <numDice>d<numSides>[h|l]<inclusion number>
-where the number of dice specifies the number of such dice to roll and sum together (default 1)
-and the inclusion number specifies the number of the highest or lowest dice to include in the final sum (default all)
+# Dice Mice
+*seemlessly roll dice within discord chat*
 
+:game_die::game_die::game_die:
 
-# plan
-- lexer handles single-die rolls with no extra text
-- lexer handles extra text without altering its formatting
-- lexer does not try to handle dice with 0 sides
-- parser parses single-die results without extra text
-- parser handles extra text
-- lexer rolls multiple dice at once
-- parser parses multiple dice at once
-- parser shows the sum of multi-die rolls
+## installation
+1. visit the [authorisation page](https://discord.com/api/oauth2/authorize?client_id=719095785513418753&permissions=0&scope=bot)
+2. select the server you wish to add the bot to.
+3.  click authorise.
+4. Your dice mice should arrive in your server shortly, ready to roll.
 
-when dice rolls are embedded in a mathematical expression, parser evaluates the entire expression
-- start with addition
-- then subtraction
-then leave the other operations until later
+## Examples:
+* Simply write standard RPG dice codes within your discord messages, and let the dice mice do the rest.
+*
+  * Theo types, "Attack the goblin for d20+5".
+  * Dice Mice types, "Theo: Attack the goblin for [18]+5 = 23".
+*
+  * Nicole types, "Deals d8 + 3d6 +3 damage to the troll with an arrow straight in the forehead!"
+  * Dice Mice types, "Nicole: Deals [6] + [3, 5, 2] +3 = 19 damage to the troll with an arrow straight in the forehead!"
+*
+  * Franklin types, "heals his comrade for 2d4-2 hit points."
+  * Dice Mice types, "Franklin: heals his comrade for [1, 3]-2 = 2 hit points."
 
-test it is thread safe
-implement in bot code
-implement the inclusion number
+## syntax
+dice codes have the syntax `[<num dice>]d<num sides>`.
+num dice (optional) is the number of dice to roll, and must be non-negative.
+num sides is the number of sides the dice should have, and must be a positive number. E.G. d6 is a six-sided die, and d12 is a 12-sided die.
+
+## Upcoming Features
+*  option to only sum up the highest/lowest dice when rolling multiple dice
+*  shortcuts for rolling with advantage and disadvantage
+*  user-defined macros
+*  feature to repeat recent commands
+*  optionally printout details about how the message was parsed to assist in debugging and learning syntax
+*  syntax for repeating a set of rolls
+*  evaluate multiplication and division
