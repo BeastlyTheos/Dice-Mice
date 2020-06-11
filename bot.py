@@ -23,11 +23,11 @@ async def on_ready():
 @client.event
 async def on_message(msg):
 	if msg.author == client.user:
-		print(f"client just said {msg.content}")
 		return
 	if not diceRegexp.search(msg.content):
 		return
+
 	res = parser.parse(msg.content)
-	await msg.channel.send(f"You just said {res}")
+	await msg.channel.send(f"{msg.author.display_name}: {res}")
 
 client.run(TOKEN)
