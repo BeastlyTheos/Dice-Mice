@@ -28,6 +28,6 @@ async def on_message(msg):
 		return
 
 	res = parser.parse(msg.content)
-	await msg.channel.send(f"{msg.author.display_name}: {res}")
+	await msg.channel.send(f"{msg.author.display_name} -- {res}")
 
 client.run(TOKEN)

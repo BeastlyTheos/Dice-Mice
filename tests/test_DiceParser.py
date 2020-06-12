@@ -3,6 +3,7 @@ import unittest
 
 from DiceParser import (
 	lexer, parser,
+	HIGHEST, LOWEST,
 	p_expr2numeric,
 	p_numeric2DIE,
 	p_numeric2PLUSMINUS,
@@ -11,14 +12,45 @@ from DiceParser import (
 
 class TestLexer(unittest.TestCase):
 	def test_diceTokenising(self):
-		for data, numDice, numSides in (
-			("d20", 1, 20),
-			("d8", 1, 8),
-			("D8", 1, 8),
-			("2d20", 2, 20),
-			("9d8", 9, 8),
-			("10D8", 10, 8),
-			("0d10", 0, 10),
+		for data, numDice, numSides, range, rangeSize in (
+			("d20", 1, 20, HIGHEST, 1),
+			("d8", 1, 8, HIGHEST, 1),
+			("D8", 1, 8, HIGHEST, 1),
+			("2d20", 2, 20, HIGHEST, 2),
+			("9d8", 9, 8, HIGHEST, 9),
+			("10D8", 10, 8, HIGHEST, 10),
+			("0d10", 0, 10, HIGHEST, 0),
+			("2d20kh1", 2, 20, HIGHEST, 1),
+			("3d20kh1", 3, 20, HIGHEST, 1),
+			("4d6kl3", 4, 6, LOWEST, 3),
+			("8d20DH5", 8, 20, LOWEST, 3),
+			("1d20DL1", 1, 20, HIGHEST, 0),
+			("3d20k1", 3, 20, HIGHEST, 1),
+			("4d6k3", 4, 6, HIGHEST, 3),
+			("8d20D5", 8, 20, HIGHEST, 3),
+			("1d20D1", 1, 20, HIGHEST, 0),
+			("3d20h1", 3, 20, HIGHEST, 1),
+			("4d6l3", 4, 6, LOWEST, 3),
+			("8d20H5", 8, 20, HIGHEST, 5),
+			("1d20L1", 1, 20, LOWEST, 1),
+			("3d201", 3, 201, HIGHEST, 3),
+			("4d63", 4, 63, HIGHEST, 4),
+			("8d205", 8, 205, HIGHEST, 8),
+			("1d201", 1, 201, HIGHEST, 1),
+			("3d20kh", 3, 20, HIGHEST, 1),
+			("4d6kl", 4, 6, LOWEST, 1),
+			("8d20DH", 8, 20, LOWEST, 7),
+			("1d20DL", 1, 20, HIGHEST, 0),
+			("3d20k", 3, 20, HIGHEST, 1),
+			("4d6k", 4, 6, HIGHEST, 1),
+			("8d20D", 8, 20, HIGHEST, 7),
+			("1d20D", 1, 20, HIGHEST, 0),
+			("3d20k", 3, 20, HIGHEST, 1),
+			("4d6k", 4, 6, HIGHEST, 1),
+			("8d20D", 8, 20, HIGHEST, 7),
+			("1d20D", 1, 20, HIGHEST, 0),
+			("1d20D8", 1, 20, HIGHEST, 0),
+			("4d6k12", 4, 6, HIGHEST, 4),
 		):
 			lexer.input(data)
 			tok = lexer.token()
@@ -30,6 +62,18 @@ class TestLexer(unittest.TestCase):
 			self.assertEqual(
 				tok.value['numSides'], numSides,
 				f"Token for {data} has {tok.value['numSides']} sides, but should have {numSides} sides."
+			)
+			self.assertEqual(
+				tok.value['range'], range,
+				"Token for {data} includes the {range} dice in its sum, but should include the {expected}.".format(
+					data=data,
+					range="HIGHEST" if tok.value['range'] == HIGHEST else "lowest",
+					expected="HIGHEST" if range == HIGHEST else "lowest",
+				)
+			)
+			self.assertEqual(
+				tok.value['rangeSize'], rangeSize,
+				f"Token for {data} includes {tok.value['rangeSize']} dice in its sum, but should have {rangeSize} dice."
 			)
 			tok = lexer.token()
 			self.assertFalse(tok, f"When tokenising {data} multiple tokens were returned.")
@@ -49,6 +93,11 @@ class TestLexer(unittest.TestCase):
 			('d4then anotherd20 d4roll', 'then anotherd20 roll'),
 			('trying to negate a roll -d4', 'trying to negate a roll -'),
 			('trying to roll a negative number of times -2d8.', 'trying to roll a negative number of times -.'),
+			('lowest d20l3', 'lowest '),
+			('h-d45h8.', 'h-.'),
+			('3 d12kk ', '3 k '),
+			('then d4dk4', 'then k4'),
+			('and 4d8kl1 hits', 'and  hits'),
 		):
 			lexer.input(data)
 
@@ -81,7 +130,7 @@ class TestLexer(unittest.TestCase):
 			self.assertEqual(tok.value, value, f"text is `{text}`")
 
 
-class TestDiceParser(unittest.TestCase):
+class TestParser(unittest.TestCase):
 	def test_DiceParsing(self):
 		for data, expectedValues in (
 			("d20", 20),

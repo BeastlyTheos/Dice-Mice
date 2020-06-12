@@ -7,6 +7,8 @@
 from ply import lex, yacc
 from random import randint
 
+HIGHEST, LOWEST = range(2)
+
 tokens = [
 	"PLAINTEXT",
 	"NUMBER",
@@ -32,10 +34,23 @@ def t_NUMBER(t):
 
 
 def t_DIE(t):
-	r'(?<!\w)(?P<numDice>\d+)?[Dd](?P<numSides>[1-9]\d*)'
-	t.value = t.lexer.lexmatch.groupdict()
-	t.value['numDice'] = int(t.value['numDice']) if t.value['numDice'] else 1
-	t.value['numSides'] = int(t.value['numSides'])
+	r'(?<!\w)(?P<numDice>\d+)?[Dd](?P<numSides>[1-9]\d*)(?P<inclusive>[KDkd])?(?P<range>[HLhl])?(?P<rangeSize>\d+)?'  # noqa
+	data = t.lexer.lexmatch.groupdict()
+	data['numDice'] = int(data['numDice']) if data['numDice'] else 1
+	data['numSides'] = int(data['numSides'])
+	if data['inclusive'] is None and data['range'] is None:
+		data['rangeSize'] = data['numDice']
+	data['rangeSize'] = 1 if data['rangeSize'] is None else int(data['rangeSize'])
+	if data['inclusive'] and data['inclusive'] in 'Dd':
+		data['range'] = LOWEST if data['range'] and data['range'] in 'Hh' else HIGHEST
+		data['rangeSize'] = data['numDice'] - data['rangeSize']
+	else:
+		data['range'] = LOWEST if data['range'] and data['range'] in 'Ll' else HIGHEST
+	if data['rangeSize'] < 0:
+		data['rangeSize'] = 0
+	if data['rangeSize'] > data['numDice']:
+		data['rangeSize'] = data['numDice']
+	t.value = data
 	return t
 
 
