@@ -111,8 +111,15 @@ def p_numeric2DIE(p):
 	'numeric : DIE'
 	tok = p[1]
 	rolls = [randint(1, tok['numSides']) for i in range(tok['numDice'])]
-	result = sum(rolls)
 	text = str(rolls[0]) if len(rolls) == 1 else str(rolls)
+	rolls.sort()
+	max = tok['numDice']
+	min = 0
+	if tok['range'] == HIGHEST:
+		min = tok['numDice'] - tok['rangeSize']
+	else:
+		max = tok['rangeSize']
+	result = sum(rolls[min: max])
 	p[0] = dict(result=result, text=text)
 
 
