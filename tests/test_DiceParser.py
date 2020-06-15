@@ -51,6 +51,10 @@ class TestLexer(unittest.TestCase):
 			("1d20D", 1, 20, HIGHEST, 0),
 			("1d20D8", 1, 20, HIGHEST, 0),
 			("4d6k12", 4, 6, HIGHEST, 4),
+			("d20adv", 2, 20, HIGHEST, 1),
+			("d20dis", 2, 20, LOWEST, 1),
+			("3d6AdV", 4, 6, HIGHEST, 3),
+			("0d20dis", 1, 20, LOWEST, 0),
 		):
 			lexer.input(data)
 			tok = lexer.token()
@@ -98,6 +102,9 @@ class TestLexer(unittest.TestCase):
 			('3 d12kk ', '3 k '),
 			('then d4dk4', 'then k4'),
 			('and 4d8kl1 hits', 'and  hits'),
+			('d20adv', ''),
+			('3d4dis stats', ' stats'),
+			('t d20dishit', 't hit'),
 		):
 			lexer.input(data)
 
@@ -172,6 +179,9 @@ class TestParser(unittest.TestCase):
 			('rolling a negative number of times -2d8.', r'rolling a negative number of times -\[\d, \d] = \d{1,2}.'),
 			('4+8-3', r'4\+8-3 = 9'),
 			('4-8+3', r'4-8\+3 = -1'),
+			('d20adv', r'\[\d{1,2}, \d{1,2}\] = \d{1,2}'),
+			('d20dis', r'\[\d{1,2}, \d{1,2}\] = \d{1,2}'),
+			('3d6adv', r'\[\d(, \d){3}\] = \d{1,2}'),
 		):
 			res = parser.parse(data)
 			self.assertTrue(res, f'failed to parse `{data}`')

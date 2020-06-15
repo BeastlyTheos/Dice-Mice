@@ -45,23 +45,38 @@ def t_DIE(t):
 	(?<!\w)
 	(?P<numDice>\d+)?
 	d(?P<numSides>[1-9]\d*)
-	(?P<inclusive>[kd])?(?P<range>[hl])?(?P<rangeSize>\d+)?
+	(?P<modifier>
+		adv
+	|
+		dis
+	|
+		(?P<inclusive>[kd])?(?P<range>[hl])?(?P<rangeSize>\d+)?
+	)?
 	'''
 	data = t.lexer.lexmatch.groupdict()
 	data['numDice'] = int(data['numDice']) if data['numDice'] else 1
 	data['numSides'] = int(data['numSides'])
-	if data['inclusive'] is None and data['range'] is None:
+	if data['modifier'].lower() == 'adv':
+		data['range'] = HIGHEST
 		data['rangeSize'] = data['numDice']
-	data['rangeSize'] = 1 if data['rangeSize'] is None else int(data['rangeSize'])
-	if data['inclusive'] and data['inclusive'] in 'Dd':
-		data['range'] = LOWEST if data['range'] and data['range'] in 'Hh' else HIGHEST
-		data['rangeSize'] = data['numDice'] - data['rangeSize']
+		data['numDice'] += 1
+	elif data['modifier'].lower() == 'dis':
+		data['range'] = LOWEST
+		data['rangeSize'] = data['numDice']
+		data['numDice'] += 1
 	else:
-		data['range'] = LOWEST if data['range'] and data['range'] in 'Ll' else HIGHEST
-	if data['rangeSize'] < 0:
-		data['rangeSize'] = 0
-	if data['rangeSize'] > data['numDice']:
-		data['rangeSize'] = data['numDice']
+		if data['inclusive'] is None and data['range'] is None:
+			data['rangeSize'] = data['numDice']
+		data['rangeSize'] = 1 if data['rangeSize'] is None else int(data['rangeSize'])
+		if data['inclusive'] and data['inclusive'] in 'Dd':
+			data['range'] = LOWEST if data['range'] and data['range'] in 'Hh' else HIGHEST
+			data['rangeSize'] = data['numDice'] - data['rangeSize']
+		else:
+			data['range'] = LOWEST if data['range'] and data['range'] in 'Ll' else HIGHEST
+		if data['rangeSize'] < 0:
+			data['rangeSize'] = 0
+		if data['rangeSize'] > data['numDice']:
+			data['rangeSize'] = data['numDice']
 	t.value = data
 	return t
 
