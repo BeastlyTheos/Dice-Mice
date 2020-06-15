@@ -4,6 +4,7 @@
 # where the numbers inside the braces are results of a set of rolls
 # and the [hl] followed by a number indicates to keep as many highest or lowest rolls
 
+import re
 from ply import lex, yacc
 from random import randint
 
@@ -23,7 +24,13 @@ t_MINUS = r'\s*-\s*'
 
 
 def t_NUMBER(t):
-	r'(?P<num>\d+(\.\d+)?)(?!\d*[Dd][1-9])'
+	r'''
+	(?P<num>
+		\d+
+		(\.\d+)?
+	)
+	(?!\d*d[1-9])
+	'''
 	m = t.lexer.lexmatch
 	val = m.group('num')
 	try:
@@ -34,7 +41,12 @@ def t_NUMBER(t):
 
 
 def t_DIE(t):
-	r'(?<!\w)(?P<numDice>\d+)?[Dd](?P<numSides>[1-9]\d*)(?P<inclusive>[KDkd])?(?P<range>[HLhl])?(?P<rangeSize>\d+)?'  # noqa
+	r'''
+	(?<!\w)
+	(?P<numDice>\d+)?
+	d(?P<numSides>[1-9]\d*)
+	(?P<inclusive>[kd])?(?P<range>[hl])?(?P<rangeSize>\d+)?
+	'''
 	data = t.lexer.lexmatch.groupdict()
 	data['numDice'] = int(data['numDice']) if data['numDice'] else 1
 	data['numSides'] = int(data['numSides'])
@@ -59,7 +71,7 @@ def t_error(t):
 	t.lexer.skip(1)
 
 
-lexer = lex.lex()
+lexer = lex.lex(reflags=re.VERBOSE | re.IGNORECASE)
 
 precedence = (
 	('left', 'expr'),
