@@ -92,7 +92,10 @@ def t_DIE(t):
 
 
 def t_error(t):
-	print(f"Error tokenising starting at position {t.lexer.lexpos}. Remaining text is {t.value}")
+	value = repr(t.value)
+	data = repr(t.lexer.lexdata)
+	print(f"Error tokenising {value} at position {t.lexpos} in {data}.")
+	log.error(f"Unable to tokenise {value} at position {t.lexpos} in {data}.")
 	t.lexer.skip(1)
 
 
