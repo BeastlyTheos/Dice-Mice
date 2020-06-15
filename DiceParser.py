@@ -4,9 +4,19 @@
 # where the numbers inside the braces are results of a set of rolls
 # and the [hl] followed by a number indicates to keep as many highest or lowest rolls
 
-import re
+import logging
 from ply import lex, yacc
 from random import randint
+import re
+
+logging.basicConfig(
+	level=logging.DEBUG,
+	filename="parser.log",
+	format="{levelname} {message} on {asctime}. In {filename}, {funcName} line {lineno}",
+	datefmt="%b %d %H:%M",
+	style="{",
+)
+log = logging.getLogger("parser")
 
 HIGHEST, LOWEST = range(2)
 
@@ -150,8 +160,16 @@ def p_numeric2DIE(p):
 	p[0] = dict(result=result, text=text)
 
 
+def p_expr2error(p):
+	'expr : error'
+	p[0] = '**<ERROR>**'
+
+
 def p_error(p):
-	print(f"Syntax error in input at {p}")
+	value = repr(p.value)
+	data = repr(p.lexer.lexdata)
+	print(f"Error parsing {p.type} token at position {p.lexpos} in {data}.")
+	log.error(f"Unable to parse the token {value} of type {p.type} at position {p.lexpos} in {data}.")
 
 
 parser = yacc.yacc()
