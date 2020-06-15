@@ -4,8 +4,11 @@
 # where the numbers inside the braces are results of a set of rolls
 # and the [hl] followed by a number indicates to keep as many highest or lowest rolls
 
+import re
 from ply import lex, yacc
 from random import randint
+
+HIGHEST, LOWEST = range(2)
 
 tokens = [
 	"PLAINTEXT",
@@ -21,7 +24,13 @@ t_MINUS = r'\s*-\s*'
 
 
 def t_NUMBER(t):
-	r'(?P<num>\d+(\.\d+)?)(?!\d*[Dd][1-9])'
+	r'''
+	(?P<num>
+		\d+
+		(\.\d+)?
+	)
+	(?!\d*d[1-9])
+	'''
 	m = t.lexer.lexmatch
 	val = m.group('num')
 	try:
@@ -32,10 +41,43 @@ def t_NUMBER(t):
 
 
 def t_DIE(t):
-	r'(?<!\w)(?P<numDice>\d+)?[Dd](?P<numSides>[1-9]\d*)'
-	t.value = t.lexer.lexmatch.groupdict()
-	t.value['numDice'] = int(t.value['numDice']) if t.value['numDice'] else 1
-	t.value['numSides'] = int(t.value['numSides'])
+	r'''
+	(?<!\w)
+	(?P<numDice>\d+)?
+	d(?P<numSides>[1-9]\d*)
+	(?P<modifier>
+		adv
+	|
+		dis
+	|
+		(?P<inclusive>[kd])?(?P<range>[hl])?(?P<rangeSize>\d+)?
+	)?
+	'''
+	data = t.lexer.lexmatch.groupdict()
+	data['numDice'] = int(data['numDice']) if data['numDice'] else 1
+	data['numSides'] = int(data['numSides'])
+	if data['modifier'].lower() == 'adv':
+		data['range'] = HIGHEST
+		data['rangeSize'] = data['numDice']
+		data['numDice'] += 1
+	elif data['modifier'].lower() == 'dis':
+		data['range'] = LOWEST
+		data['rangeSize'] = data['numDice']
+		data['numDice'] += 1
+	else:
+		if data['inclusive'] is None and data['range'] is None:
+			data['rangeSize'] = data['numDice']
+		data['rangeSize'] = 1 if data['rangeSize'] is None else int(data['rangeSize'])
+		if data['inclusive'] and data['inclusive'] in 'Dd':
+			data['range'] = LOWEST if data['range'] and data['range'] in 'Hh' else HIGHEST
+			data['rangeSize'] = data['numDice'] - data['rangeSize']
+		else:
+			data['range'] = LOWEST if data['range'] and data['range'] in 'Ll' else HIGHEST
+		if data['rangeSize'] < 0:
+			data['rangeSize'] = 0
+		if data['rangeSize'] > data['numDice']:
+			data['rangeSize'] = data['numDice']
+	t.value = data
 	return t
 
 
@@ -44,7 +86,7 @@ def t_error(t):
 	t.lexer.skip(1)
 
 
-lexer = lex.lex()
+lexer = lex.lex(reflags=re.VERBOSE | re.IGNORECASE)
 
 precedence = (
 	('left', 'expr'),
@@ -96,8 +138,15 @@ def p_numeric2DIE(p):
 	'numeric : DIE'
 	tok = p[1]
 	rolls = [randint(1, tok['numSides']) for i in range(tok['numDice'])]
-	result = sum(rolls)
 	text = str(rolls[0]) if len(rolls) == 1 else str(rolls)
+	rolls.sort()
+	max = tok['numDice']
+	min = 0
+	if tok['range'] == HIGHEST:
+		min = tok['numDice'] - tok['rangeSize']
+	else:
+		max = tok['rangeSize']
+	result = sum(rolls[min: max])
 	p[0] = dict(result=result, text=text)
 
 
