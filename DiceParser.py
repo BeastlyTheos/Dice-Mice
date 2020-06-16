@@ -10,7 +10,7 @@ from random import randint
 import re
 
 logging.basicConfig(
-	level=logging.DEBUG,
+	level=logging.ERROR,
 	filename="parser.log",
 	format="{levelname} {message} on {asctime}. In {filename}, {funcName} line {lineno}",
 	datefmt="%b %d %H:%M",
