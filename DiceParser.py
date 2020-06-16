@@ -28,7 +28,7 @@ tokens = [
 	"DIE",
 ]
 
-t_PLAINTEXT = r'.'
+t_PLAINTEXT = r'.+?'
 t_PLUS = r'\s*\+\s*'
 t_MINUS = r'\s*-\s*'
 
@@ -99,7 +99,7 @@ def t_error(t):
 	t.lexer.skip(1)
 
 
-lexer = lex.lex(reflags=re.VERBOSE | re.IGNORECASE)
+lexer = lex.lex(reflags=re.DOTALL | re.IGNORECASE | re.VERBOSE)
 
 precedence = (
 	('left', 'expr'),
