@@ -34,7 +34,7 @@ async def on_message(msg):
 		if msg.author == client.user:
 			return "own message"
 		if not diceRegexp.search(msg.content):
-			return
+			return "no dice"
 
 		res = parser.parse(msg.content)
 		await msg.channel.send(f"{msg.author.display_name} -- {res}")
