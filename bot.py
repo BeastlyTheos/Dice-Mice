@@ -42,7 +42,6 @@ async def on_message(msg):
 		log.error(
 			f"{repr(e)} when handling on_message event with content {repr(msg.content)} from {msg.author.display_name}."
 		)
-		raise e
 
 if __name__ == '__main__':
 	client.run(TOKEN)

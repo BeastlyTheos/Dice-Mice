@@ -1,4 +1,5 @@
 from asyncio import run
+import logging
 import unittest
 from unittest.mock import AsyncMock, Mock
 
@@ -40,3 +41,7 @@ class Test_on_message(unittest.TestCase):
 			msg.content = content
 			run(on_message(msg))
 			msg.channel.send.assert_called()
+
+	def test_logsError_whenRaisingException(self):
+		with self.assertLogs("main", logging.ERROR):
+			run(on_message(Mock(side_effect=Exception("test exception"))))
