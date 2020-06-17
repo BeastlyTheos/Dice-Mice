@@ -5,8 +5,8 @@ import re
 import discord
 from dotenv import load_dotenv
 
-from DiceParser import parser, t_DIE
-diceRegexp = re.compile(t_DIE.__doc__)
+from DiceParser import parser, lexerRegexFlags, t_DIE
+diceRegex = re.compile(t_DIE.__doc__, flags=lexerRegexFlags)
 
 logging.basicConfig(
 	level=logging.ERROR,
@@ -33,7 +33,7 @@ async def on_message(msg):
 	try:
 		if msg.author == client.user:
 			return "own message"
-		if not diceRegexp.search(msg.content):
+		if not diceRegex.search(msg.content):
 			return "no dice"
 
 		res = parser.parse(msg.content)
