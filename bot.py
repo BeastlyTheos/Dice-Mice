@@ -32,7 +32,7 @@ async def on_ready():
 async def on_message(msg):
 	try:
 		if msg.author == client.user:
-			return
+			return "own message"
 		if not diceRegexp.search(msg.content):
 			return
 
@@ -44,4 +44,5 @@ async def on_message(msg):
 		)
 		raise e
 
-client.run(TOKEN)
+if __name__ == '__main__':
+	client.run(TOKEN)
