@@ -18,6 +18,7 @@ logging.basicConfig(
 )
 log = logging.getLogger("parser")
 
+lexerRegexFlags = re.DOTALL | re.IGNORECASE | re.UNICODE | re.VERBOSE
 HIGHEST, LOWEST = range(2)
 
 tokens = [
@@ -99,7 +100,7 @@ def t_error(t):
 	t.lexer.skip(1)
 
 
-lexer = lex.lex(reflags=re.DOTALL | re.IGNORECASE | re.VERBOSE)
+lexer = lex.lex(reflags=lexerRegexFlags)
 
 precedence = (
 	('left', 'expr'),
