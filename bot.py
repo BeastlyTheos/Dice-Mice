@@ -34,11 +34,14 @@ async def on_message(msg):
 	try:
 		if msg.author == client.user:
 			return "own message"
-		if not diceRegex.search(msg.content):
+		elif diceRegex.search(msg.content):
+			res = parser.parse(msg.content)
+			reply = f"{msg.author.display_name} -- {res}"
+		else:
 			return "no dice"
 
-		res = parser.parse(msg.content)
-		await msg.channel.send(f"{msg.author.display_name} -- {res}")
+		if reply:
+			await msg.channel.send(reply)
 	except Exception as e:
 		log.error(
 			f"{repr(e)} when handling on_message event with content {repr(msg.content)} from {msg.author.display_name}."
