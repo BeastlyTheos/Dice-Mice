@@ -34,6 +34,9 @@ async def on_message(msg):
 	try:
 		if msg.author == client.user:
 			return "own message"
+		if msg.content.startswith("!"):
+			command = msg.content[1:]
+			reply = handleCommand(msg, command)
 		elif diceRegex.search(msg.content):
 			res = parser.parse(msg.content)
 			reply = f"{msg.author.display_name} -- {res}"
@@ -46,6 +49,26 @@ async def on_message(msg):
 		log.error(
 			f"{repr(e)} when handling on_message event with content {repr(msg.content)} from {msg.author.display_name}."
 		)
+
+
+def handleCommand(msg, command):
+	words = command.split(" ")
+	command = words[0]
+	if command in COMMANDS:
+		args = " ".join(words[1:])
+		msg.content = args
+		return COMMANDS[command](msg, args)
+	else:
+		return None
+
+
+def handleAlias(msg):
+	pass
+
+
+COMMANDS = dict(
+	alias=handleAlias,
+)
 
 if __name__ == '__main__':
 	client.run(TOKEN)

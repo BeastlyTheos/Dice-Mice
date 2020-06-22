@@ -4,7 +4,11 @@ import unittest
 from unittest.mock import AsyncMock, Mock
 
 import bot
-from bot import on_message
+from bot import (
+	on_message,
+	COMMANDS,
+	handleCommand,
+)
 
 
 class Test_on_message(unittest.TestCase):
@@ -45,3 +49,23 @@ class Test_on_message(unittest.TestCase):
 	def test_logsError_whenRaisingException(self):
 		with self.assertLogs("main", logging.ERROR):
 			run(on_message(Mock(side_effect=Exception("test exception"))))
+
+
+class Test_handleCommand(unittest.TestCase):
+	def test_delegatesToCorrectHandler(self):
+		msg = Mock(name="msg")
+
+		for name in COMMANDS:
+			COMMANDS[name] = Mock(name=name)
+
+		for content, name in (
+			("alias", "alias"),
+			("alias = ", "alias"),
+			("alias hw = hello world", "alias"),
+		):
+			words = content.split(" ")
+			args = " ".join(words[1:])
+
+			handleCommand(msg, content)
+			COMMANDS[name].assert_called_with(msg, args)
+			COMMANDS[name].reset()
