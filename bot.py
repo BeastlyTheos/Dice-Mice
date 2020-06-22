@@ -52,7 +52,7 @@ async def on_message(msg):
 
 
 def handleCommand(msg, command):
-	words = command.split(" ")
+	words = command.strip().split(" ")
 	command = words[0]
 	if command in COMMANDS:
 		args = " ".join(words[1:])

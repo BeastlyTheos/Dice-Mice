@@ -60,12 +60,25 @@ class Test_handleCommand(unittest.TestCase):
 
 		for content, name in (
 			("alias", "alias"),
-			("alias = ", "alias"),
-			("alias hw = hello world", "alias"),
+			("  alias = ", "alias"),
+			("\talias hw = hello world", "alias"),
 		):
-			words = content.split(" ")
+			words = content.strip().split(" ")
 			args = " ".join(words[1:])
 
 			handleCommand(msg, content)
 			COMMANDS[name].assert_called_with(msg, args)
 			COMMANDS[name].reset()
+
+	def test_returnsNothing_whenInvokedWithInvalidCommand(self):
+		for command in (
+			"wrongcommand",
+			"hello world",
+			"alais",
+			"ailas",
+			"None",
+			" \t",
+			"",
+		):
+			reply = handleCommand(Mock(), command)
+			self.assertFalse(reply, f"Returned {reply} when issuing invalid {command=}")
