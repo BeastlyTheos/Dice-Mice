@@ -103,4 +103,4 @@ class Test_handleAlias(unittest.TestCase):
 			handleAlias(msg, content)
 			res = session.query(Alias).filter_by(user=userId, name=name)
 			self.assertEqual(res.count(), 1)
-			self.assertEqual(res[0].command, definition)
+			self.assertEqual(res[0].definition, definition)
