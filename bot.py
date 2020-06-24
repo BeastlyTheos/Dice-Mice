@@ -22,10 +22,12 @@ log = logging.getLogger("main")
 
 load_dotenv()
 TOKEN = os.getenv("DISCORD_TOKEN")
-
 client = discord.Client()
+
 engine = create_engine('sqlite:///db/db.sqlite3')
 Session = sessionmaker(bind=engine)
+
+aliasRegex = re.compile(r'\s*(?P<name>\w+)?\s*(?P<equals>=)?\s*(?P<definition>.*)')
 
 
 @client.event
@@ -74,13 +76,18 @@ def parseCommand(command):
 
 
 def handleAlias(msg, args):
+	name, isDefining, definition = parseAlias(args)
 	session = Session()
-	if len(args) >= 2:
-		name = args[0]
-		command = " ".join(args[1:])
-		alias = Alias(user=msg.author.user, name=name, command=command)
+	if definition:
+		alias = Alias(user=msg.author.user, name=name, command=definition)
 		session.add(alias)
 		session.commit()
+
+
+def parseAlias(args):
+	m = aliasRegex.match(args)
+	isDefining = m.group('equals') or m.group('definition')
+	return m.group('name'), isDefining, m.group('definition')
 
 
 COMMANDS = dict(

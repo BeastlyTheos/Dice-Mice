@@ -12,7 +12,7 @@ from bot import (
 	handleCommand,
 	parseCommand,
 	handleAlias,
-	Alias
+	Alias,
 )
 
 bot.engine = create_engine('sqlite:///:memory:')
@@ -95,15 +95,12 @@ class Test_handleAlias(unittest.TestCase):
 	def test_storesAlias_whenDefinedByUser(self):
 		msg = Mock()
 		session = bot.Session()
-		for userId, arg in (
-			(0, "hit for d6"),
+		for userId, content, name, definition in (
+			(0, "slam = slams for d6", "slam", "slams for d6"),
+			(86400, "rapier = d20adv + 5 then hit for d8", "rapier", "d20adv + 5 then hit for d8"),
 		):
 			msg.author.user = userId
-			args = arg.split(" ")
-			name = args[0]
-			command = " ".join(args[1:])
-
-			handleAlias(msg, args)
+			handleAlias(msg, content)
 			res = session.query(Alias).filter_by(user=userId, name=name)
 			self.assertEqual(res.count(), 1)
-			self.assertEqual(res[0].command, command)
+			self.assertEqual(res[0].command, definition)
