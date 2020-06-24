@@ -79,9 +79,10 @@ def handleAlias(msg, args):
 	name, isDefining, definition = parseAlias(args)
 	session = Session()
 	if definition:
-		alias = Alias(user=msg.author.user, name=name, definition=definition)
+		alias = Alias(user=msg.author.id, name=name, definition=definition)
 		session.add(alias)
 		session.commit()
+		return f"stored alias for {msg.author.display_name} = {definition}"
 
 
 def parseAlias(args):

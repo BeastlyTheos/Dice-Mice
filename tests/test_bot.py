@@ -99,8 +99,10 @@ class Test_handleAlias(unittest.TestCase):
 			(0, "slam = slams for d6", "slam", "slams for d6"),
 			(86400, "rapier = d20adv + 5 then hit for d8", "rapier", "d20adv + 5 then hit for d8"),
 		):
-			msg.author.user = userId
-			handleAlias(msg, content)
+			msg.author.display_name = "Bob"
+			msg.author.id = userId
+			reply = handleAlias(msg, content)
+			self.assertEqual(reply, f"stored alias for {msg.author.display_name} = {definition}")
 			res = session.query(Alias).filter_by(user=userId, name=name)
 			self.assertEqual(res.count(), 1)
 			self.assertEqual(res[0].definition, definition)
