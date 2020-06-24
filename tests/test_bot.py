@@ -1,5 +1,7 @@
 from asyncio import run
 import logging
+from sqlalchemy import create_engine
+from sqlalchemy.orm import sessionmaker
 import unittest
 from unittest.mock import AsyncMock, Mock
 
@@ -8,7 +10,13 @@ from bot import (
 	on_message,
 	COMMANDS,
 	handleCommand,
+	handleAlias,
+	Alias
 )
+
+bot.engine = create_engine('sqlite:///:memory:')
+bot.Session = sessionmaker(bind=bot.engine)
+Alias.metadata.create_all(bot.engine)
 
 
 class Test_on_message(unittest.TestCase):
@@ -64,10 +72,9 @@ class Test_handleCommand(unittest.TestCase):
 			("\talias hw = hello world", "alias"),
 		):
 			words = content.strip().split(" ")
-			args = " ".join(words[1:])
 
 			handleCommand(msg, content)
-			COMMANDS[name].assert_called_with(msg, args)
+			COMMANDS[name].assert_called_with(msg, words[1:])
 			COMMANDS[name].reset()
 
 	def test_returnsNothing_whenInvokedWithInvalidCommand(self):
@@ -82,3 +89,21 @@ class Test_handleCommand(unittest.TestCase):
 		):
 			reply = handleCommand(Mock(), command)
 			self.assertFalse(reply, f"Returned {reply} when issuing invalid {command=}")
+
+
+class Test_handleAlias(unittest.TestCase):
+	def test_storesAlias_whenDefinedByUser(self):
+		msg = Mock()
+		session = bot.Session()
+		for userId, arg in (
+			(0, "hit for d6"),
+		):
+			msg.author.user = userId
+			args = arg.split(" ")
+			name = args[0]
+			command = " ".join(args[1:])
+
+			handleAlias(msg, args)
+			res = session.query(Alias).filter_by(user=userId, name=name)
+			self.assertEqual(res.count(), 1)
+			self.assertEqual(res[0].command, command)

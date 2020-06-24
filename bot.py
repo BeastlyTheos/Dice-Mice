@@ -1,11 +1,13 @@
 #!/usr/bin/python3
+import discord
+from dotenv import load_dotenv
 import logging
 import os
 import re
+from sqlalchemy import create_engine
+from sqlalchemy.orm import sessionmaker
 
-import discord
-from dotenv import load_dotenv
-
+from db.models import Alias
 from DiceParser import parser, lexerRegexFlags, t_DIE
 diceRegex = re.compile(t_DIE.__doc__, flags=lexerRegexFlags)
 
@@ -22,6 +24,8 @@ load_dotenv()
 TOKEN = os.getenv("DISCORD_TOKEN")
 
 client = discord.Client()
+engine = create_engine('sqlite:///db/db.sqlite3')
+Session = sessionmaker(bind=engine)
 
 
 @client.event
@@ -55,15 +59,19 @@ def handleCommand(msg, command):
 	words = command.strip().split(" ")
 	command = words[0]
 	if command in COMMANDS:
-		args = " ".join(words[1:])
-		msg.content = args
-		return COMMANDS[command](msg, args)
+		return COMMANDS[command](msg, words[1:])
 	else:
 		return None
 
 
-def handleAlias(msg):
-	pass
+def handleAlias(msg, args):
+	session = Session()
+	if len(args) >= 2:
+		name = args[0]
+		command = " ".join(args[1:])
+		alias = Alias(user=msg.author.user, name=name, command=command)
+		session.add(alias)
+		session.commit()
 
 
 COMMANDS = dict(
