@@ -56,12 +56,21 @@ async def on_message(msg):
 
 
 def handleCommand(msg, command):
-	words = command.strip().split(" ")
-	command = words[0]
-	if command in COMMANDS:
-		return COMMANDS[command](msg, words[1:])
+	commandName, args = parseCommand(command)
+	if commandName in COMMANDS:
+		return COMMANDS[commandName](msg, args)
 	else:
 		return None
+
+
+def parseCommand(command):
+	command = command.strip()
+	try:
+		commandName = command[:command.index(' ')]
+	except ValueError:
+		commandName = command
+	args = command[len(commandName):].strip()
+	return commandName, args
 
 
 def handleAlias(msg, args):

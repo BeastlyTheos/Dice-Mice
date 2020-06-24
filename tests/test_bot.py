@@ -10,6 +10,7 @@ from bot import (
 	on_message,
 	COMMANDS,
 	handleCommand,
+	parseCommand,
 	handleAlias,
 	Alias
 )
@@ -71,10 +72,9 @@ class Test_handleCommand(unittest.TestCase):
 			("  alias = ", "alias"),
 			("\talias hw = hello world", "alias"),
 		):
-			words = content.strip().split(" ")
-
+			name, args = parseCommand(content)
 			handleCommand(msg, content)
-			COMMANDS[name].assert_called_with(msg, words[1:])
+			COMMANDS[name].assert_called_with(msg, args)
 			COMMANDS[name].reset()
 
 	def test_returnsNothing_whenInvokedWithInvalidCommand(self):
