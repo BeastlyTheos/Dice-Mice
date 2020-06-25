@@ -160,3 +160,26 @@ class Test_handleAlias(unittest.TestCase):
 			msg.author.id = authorId
 			reply = handleAlias(msg, content)
 			self.assertEqual(reply, f"{authorName} -- {name.strip()} is not aliased to anything.")
+
+	def test_whenNoArgumentsGiven_thenPrintAllAliases(self):
+		session = bot.Session()
+		msg = Mock()
+		msg.author.id = 21027
+		msg.author.display_name = "Dymorius"
+		expectedHeader = f"{msg.author.display_name} has the following aliases defined:"
+		expectedAliases = []
+		for content, name, definition in (
+			("", "slam", "slams for d6"),
+			(" ", "rapier", "d20adv + 5 then hit for d8"),
+		):
+			expectedAliases.append(f"{name} = {definition.strip()}")
+			expectedAliases.sort()
+			session.add(Alias(user=msg.author.id, name=name, definition=definition))
+			session.commit()
+
+			reply = handleAlias(msg, content)
+
+			aliases = reply.split("\n")[1:]
+			aliases.sort()
+			self.assertEqual(reply.split("\n")[0], expectedHeader)
+			self.assertListEqual(aliases, expectedAliases)

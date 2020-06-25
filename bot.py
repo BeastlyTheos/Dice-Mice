@@ -78,22 +78,28 @@ def parseCommand(command):
 def handleAlias(msg, args):
 	name, isDefining, definition = parseAlias(args)
 	session = Session()
-	if name and not isDefining:
+	if not name:
+		reply = [f"{msg.author.display_name} has the following aliases defined:"]
+		for alias in session.query(Alias).filter_by(user=msg.author.id):
+			reply.append(f"{alias.name} = {alias.definition}")
+		return "\n".join(reply)
+	elif not isDefining:
 		res = session.query(Alias).filter_by(user=msg.author.id, name=name)
 		if res.count():
 			alias = res[0]
 			return f"{msg.author.display_name} -- {alias.name} is aliased to {alias.definition}"
 		else:
 			return f"{msg.author.display_name} -- {name} is not aliased to anything."
-	if not definition:
+	elif not definition:
 		res = session.query(Alias).filter_by(user=msg.author.id, name=name)
 		if res.count():
 			alias = res[0]
 			res.delete()
+			session.commit()
 			return f"{msg.author.display_name} -- {name} is no longer aliased to {alias.definition}"
 		else:
 			return f"{msg.author.display_name} -- {name} is not aliased to anything."
-	if definition:
+	elif definition:
 		alias = Alias(user=msg.author.id, name=name, definition=definition)
 		session.add(alias)
 		session.commit()
