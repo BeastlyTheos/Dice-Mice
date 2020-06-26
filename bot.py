@@ -13,8 +13,8 @@ diceRegex = re.compile(t_DIE.__doc__, flags=lexerRegexFlags)
 
 logging.basicConfig(
 	level=logging.ERROR,
-	filename="main.log",
-	format="{levelname} {message} on {asctime}. In {filename}, {funcName} line {lineno}",
+	filename="log.log",
+	format="{levelname} from {name}. {message} on {asctime}. In {filename}, {funcName} line {lineno}",
 	datefmt="%b %d %H:%M",
 	style="{",
 )
