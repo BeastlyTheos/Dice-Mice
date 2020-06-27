@@ -1,4 +1,5 @@
 #!/usr/bin/python3
+import argparse
 import discord
 from dotenv import load_dotenv
 import logging
@@ -6,19 +7,29 @@ import os
 import re
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
+from sys import stdout
 
 from db.models import Alias
 from DiceParser import parser, lexerRegexFlags, t_DIE
 diceRegex = re.compile(t_DIE.__doc__, flags=lexerRegexFlags)
 
+argparser = argparse.ArgumentParser()
+argparser.add_argument(
+	'-v', "--verbose",
+	action='count', default=0,
+	help="Increase the output verbosity. Can be used up to 3 times.",
+)
+args = argparser.parse_args()
+
 logging.basicConfig(
-	level=logging.DEBUG,
+	level=40 - 10 * args.verbose,
 	filename="log.log",
 	format="{levelname} from {name}. {message} on {asctime}. In {filename}, {funcName} line {lineno}",
 	datefmt="%b %d %H:%M",
 	style="{",
 )
 log = logging.getLogger("main")
+log.addHandler(logging.StreamHandler(stdout))
 
 load_dotenv()
 TOKEN = os.getenv("DISCORD_TOKEN")
