@@ -75,8 +75,12 @@ def handleCommand(msg, command):
 	if commandName in COMMANDS:
 		return COMMANDS[commandName](msg, args)
 	else:
-		log.debug(f"No command matching {commandName}")
-		return None
+		session = Session()
+		for alias in session.query(Alias).filter_by(user=msg.author.id):
+			if alias.name == commandName:
+				return f"{msg.author.display_name} -- {parser.parse(alias.definition)}"
+	log.debug(f"No command matching {commandName}")
+	return None
 
 
 def parseCommand(command):

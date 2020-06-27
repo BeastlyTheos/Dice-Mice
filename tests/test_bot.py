@@ -1,5 +1,6 @@
 from asyncio import run
 import logging
+import re
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
 import unittest
@@ -78,6 +79,8 @@ class Test_handleCommand(unittest.TestCase):
 			COMMANDS[name].reset()
 
 	def test_returnsNothing_whenInvokedWithInvalidCommand(self):
+		msg = Mock()
+		msg.author.id = -1
 		for command in (
 			"wrongcommand",
 			"hello world",
@@ -87,7 +90,7 @@ class Test_handleCommand(unittest.TestCase):
 			" \t",
 			"",
 		):
-			reply = handleCommand(Mock(), command)
+			reply = handleCommand(msg, command)
 			self.assertFalse(reply, f"Returned {reply} when issuing invalid {command=}")
 
 
@@ -183,3 +186,21 @@ class Test_handleAlias(unittest.TestCase):
 			aliases.sort()
 			self.assertEqual(reply.split("\n")[0], expectedHeader)
 			self.assertListEqual(aliases, expectedAliases)
+
+	def test_whenCommandIsAnAlias_thenParseDefinition(self):
+		msg = Mock()
+		session = bot.Session()
+		for authorName, authorId, name, definition, definitionRegex in (
+			("Bill", 0, "slam", "slams for d6", r"slams for \d"),
+			("Bert", 86400, "rapier", "d20adv + 5 then hit for d8", r"\[\d{1,2}, \d{1,2}\] \+ 5 = \d{1,2} then hit for \d"),
+		):
+			msg.author.display_name = authorName
+			msg.author.id = authorId
+			session.add(Alias(user=authorId, name=name, definition=definition))
+			session.commit()
+
+			reply = handleCommand(msg, name)
+
+			expectedReply = f"{authorName} -- {definitionRegex}"
+			self.assertTrue(reply, f"Alias {name} was not executed")
+			self.assertTrue(re.match(expectedReply, reply), f"{reply=} does not match desired {expectedReply=}")
