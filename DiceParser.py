@@ -9,13 +9,6 @@ from ply import lex, yacc
 from random import randint
 import re
 
-logging.basicConfig(
-	level=logging.ERROR,
-	filename="parser.log",
-	format="{levelname} {message} on {asctime}. In {filename}, {funcName} line {lineno}",
-	datefmt="%b %d %H:%M",
-	style="{",
-)
 log = logging.getLogger("parser")
 
 lexerRegexFlags = re.DOTALL | re.IGNORECASE | re.UNICODE | re.VERBOSE
