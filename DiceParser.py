@@ -19,10 +19,14 @@ tokens = [
 	"NUMBER",
 	"PLUS",
 	"MINUS",
+	"MULTIPLY",
+	"DIVIDE",
 	"DIE",
 ]
 
 t_PLAINTEXT = r'.+?'
+t_MULTIPLY = r'\s*\*\s*'
+t_DIVIDE = r'\s*/\s*'
 t_PLUS = r'\s*\+\s*'
 t_MINUS = r'\s*-\s*'
 

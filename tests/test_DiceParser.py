@@ -139,6 +139,14 @@ class TestLexer(unittest.TestCase):
 			('-', 'MINUS'),
 			(' - ', 'MINUS'),
 			(' -', 'MINUS'),
+			('*', 'MULTIPLY'),
+			(' *', 'MULTIPLY'),
+			('* ', 'MULTIPLY'),
+			('  *  ', 'MULTIPLY'),
+			('/', 'DIVIDE'),
+			(' /', 'DIVIDE'),
+			('/ ', 'DIVIDE'),
+			('  /  ', 'DIVIDE'),
 		):
 			lexer.input(text)
 			tok = lexer.token()
