@@ -118,25 +118,31 @@ class TestLexer(unittest.TestCase):
 			self.assertEqual(plaintext, expectedPlaintext)
 
 	def test_numericTokens(self):
-		for text, value, type in (
-			('0', 0, 'NUMBER'),
-			('4', 4, 'NUMBER'),
-			('92', 92, 'NUMBER'),
-			('00', 0, 'NUMBER'),
-			('04', 4, 'NUMBER'),
-			('8.4', 8.4, 'NUMBER'),
-			('9.223', 9.223, 'NUMBER'),
-			('+', '+', 'PLUS'),
-			(' +', ' +', 'PLUS'),
-			(' +\t', ' +\t', 'PLUS'),
-			('-', '-', 'MINUS'),
-			(' - ', ' - ', 'MINUS'),
-			(' -', ' -', 'MINUS'),
+		for text, value in (
+			('0', 0),
+			('4', 4),
+			('92', 92),
+			('00', 0),
+			('04', 4),
+			('8.4', 8.4),
+			('9.223', 9.223),
+		):
+			lexer.input(text)
+			tok = lexer.token()
+			self.assertEqual(tok.value, value, f"text is `{text}`")
+
+	def test_operandTokens(self):
+		for text, type in (
+			('+', 'PLUS'),
+			(' +', 'PLUS'),
+			(' +\t', 'PLUS'),
+			('-', 'MINUS'),
+			(' - ', 'MINUS'),
+			(' -', 'MINUS'),
 		):
 			lexer.input(text)
 			tok = lexer.token()
 			self.assertEqual(tok.type, type, f"text is `{text}`")
-			self.assertEqual(tok.value, value, f"text is `{text}`")
 
 
 class TestParser(unittest.TestCase):
