@@ -192,6 +192,14 @@ class TestParser(unittest.TestCase):
 			('4/0', '4/~~0~~ = [DIVISION BY ZERO]'),
 			('*emphasis*!', '*emphasis*!'),
 			('this and/or that', 'this and/or that'),
+			('1+-3', '1+-3 = -2'),
+			('4++-+8 --- 1', '4++-+8 --- 1 = -5'),
+			('8/-2', '8/-2 = -4'),
+			('-2*-3', '-2*-3 = -6'),
+			('2*-3', '2*-3 = -6'),
+			('5/-2', '5/-2 = -2.5'),
+			('5/-3.75', '5/-3.75 = -1.33'),
+			('-13/-7', '-13/-7 = -1.86'),
 		):
 			res = parser.parse(data)
 			self.assertTrue(res, f'failed to parse `{data}`')

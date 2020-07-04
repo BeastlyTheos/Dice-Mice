@@ -168,6 +168,16 @@ def p_numeric2DIVIDE(p):
 	p[0] = dict(text=text, result=result)
 
 
+def p_numeric2UNARY_PLUSMINUS(p):
+	'''numeric : PLUS numeric
+	| MINUS numeric'''
+	text = p[1] + p[2]['text']
+	result = p[2]['result']
+	if '-' in p[1]:
+		result *= -1
+	p[0] = dict(text=text, result=result)
+
+
 def p_numeric2NUMBER(p):
 	'numeric : NUMBER'
 	result = p[1]
