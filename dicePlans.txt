@@ -1,0 +1,67 @@
+deployment:
+help messages
+error logging in p_expr2error and p_error
+constrict AWS security
+don't try to send a message over 2000 characters
+put a cap on either processing time or complexity of dice rolls. also cap number of requests at once. can probably do this through either gunicorn or asyncio's thread handler
+format tests according to 4 phases, being sure to separate creating the desired condition from testing it. also rename tests according to the givenWhenThen principle
+
+v2:
+give users the option to change the colour that their replies are sent in using the highlight.js hack.
+execute implied multiplications when two sets of brackets are next to each other or when there is a number imediately proceeding a bracket. this might either require having the multiply token match the empty string between brackets, or rearranging the productions like in the stash.
+rename expr to text
+insure unclosed brackets are handled
+rethink command characters. There should be something to start a command, something to force parsing when implied parsing is turned off, and something to execute an alias.
+option to not parse messages without an explicit initial character
+
+eventuals:
+better error handling with unmatched brackets
+brackets on all dice rolls
+printouts of how a message was parsed
+DM's assume an initial command character
+toggle the command character
+repetition of rolls
+switch alias syntax to use number sign instead of exclaimation mark
+option to echo messages without the evaluated part of the expression
+roll under an asumed name
+command to force the reply into a DM
+exponents
+fancy logic for cases where the user emotes or starts the message with, I will. Then the bot should skip the speaker tag and just write, Ted is attacking for...
+
+issues when stringing dice rolls together without seperaters, such as d8d8
+8+-9+d6+4+9--9
+1d10+3 2d8
+
+Administrator:  bot - python  -i DiceParser.py
+>>> all [1,2]
+Traceback (most recent call last):
+File "<stdin>", line 1, in <module>
+TypeError: 'builtin_function_or_method' object is not subscriptable
+>>> all
+<built-in function all>
+>>> in
+File "<stdin>", line 1
+in
+^
+SyntaxError: invalid syntax
+>>> for i in range(len(a)):
+...  print(f"{i}: {[r for r in ts if r not in a[i]]}")
+...
+0: ['$end']
+1: []
+2: []
+3: []
+4: []
+5: []
+6: []
+7: []
+8: []
+9: []
+14: ['PLAINTEXT', 'MULTIPLY', 'DIVIDE', 'CLOSE', 'error', '$end']
+16: ['PLAINTEXT', 'MULTIPLY', 'DIVIDE', 'CLOSE', 'error', '$end']
+17: ['PLAINTEXT', 'MULTIPLY', 'DIVIDE', 'CLOSE', 'error', '$end']
+19: ['PLAINTEXT', 'OPEN', 'error', 'NUMBER', 'DIE', '$end']
+20: ['PLAINTEXT', 'MULTIPLY', 'DIVIDE', 'CLOSE', 'error', '$end']
+21: ['PLAINTEXT', 'MULTIPLY', 'DIVIDE', 'CLOSE', 'error', '$end']
+22: ['PLAINTEXT', 'MULTIPLY', 'DIVIDE', 'CLOSE', 'error', '$end']
+23: ['PLAINTEXT', 'MULTIPLY', 'DIVIDE', 'CLOSE', 'error', '$end']
