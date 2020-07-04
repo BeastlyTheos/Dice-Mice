@@ -5,6 +5,7 @@
 # and the [hl] followed by a number indicates to keep as many highest or lowest rolls
 
 import logging
+from math import isnan, nan
 from ply import lex, yacc
 from random import randint
 import re
@@ -25,10 +26,10 @@ tokens = [
 ]
 
 t_PLAINTEXT = r'.+?'
-t_MULTIPLY = r'\s*\*\s*'
-t_DIVIDE = r'\s*/\s*'
 t_PLUS = r'\s*\+\s*'
 t_MINUS = r'\s*-\s*'
+t_MULTIPLY = r'\s*\*\s*'
+t_DIVIDE = r'\s*/\s*'
 
 
 def t_NUMBER(t):
@@ -104,6 +105,7 @@ precedence = (
 	('left', 'PLAINTEXT'),
 	('left', 'numeric'),
 	('left', 'PLUS', 'MINUS'),
+	('left', 'MULTIPLY', 'DIVIDE'),
 )
 
 
@@ -115,7 +117,10 @@ def p_expr2exprexpr(p):
 def p_expr2PLAINTEXT(p):
 	'''expr : PLAINTEXT
 	| PLUS
-	| MINUS'''
+	| MINUS
+	| MULTIPLY
+	| DIVIDE
+	'''
 	p[0] = p[1]
 
 
@@ -125,7 +130,14 @@ def p_expr2numeric(p):
 	if text.isdigit() or text == '[]':
 		p[0] = text
 	else:
-		p[0] = f"{p[1]['text']} = {p[1]['result']}"
+		result = p[1]['result']
+		if isnan(result):
+			result = "[DIVISION BY ZERO]"
+		else:
+			result = f"{result:n}" if int(result) == result else f"{result:.2f}"
+			while "." in result and result[-1] == "0":
+				result = result[:-1]
+		p[0] = f"{p[1]['text']} = {result}"
 
 
 def p_numeric2PLUSMINUS(p):
@@ -135,6 +147,24 @@ def p_numeric2PLUSMINUS(p):
 		p[3]['result'] *= -1
 	text = p[1]['text'] + p[2] + p[3]['text']
 	result = p[1]['result'] + p[3]['result']
+	p[0] = dict(text=text, result=result)
+
+
+def p_numeric2MULTIPLY(p):
+	'numeric : numeric MULTIPLY numeric'
+	text = p[1]['text'] + p[2] + p[3]['text']
+	result = p[1]['result'] * p[3]['result']
+	p[0] = dict(text=text, result=result)
+
+
+def p_numeric2DIVIDE(p):
+	'numeric : numeric DIVIDE numeric'
+	if p[3]['result']:
+		result = p[1]['result'] / p[3]['result']
+	else:
+		p[3]['text'] = f"~~{p[3]['text']}~~"
+		result = nan
+	text = p[1]['text'] + p[2] + p[3]['text']
 	p[0] = dict(text=text, result=result)
 
 

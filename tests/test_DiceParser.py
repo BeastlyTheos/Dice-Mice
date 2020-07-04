@@ -181,13 +181,24 @@ class TestParser(unittest.TestCase):
 			('ctrl+alt-delete', 'ctrl+alt-delete'),
 			('4+8-3', '4+8-3 = 9'),
 			('4-8+3', '4-8+3 = -1'),
+			('1*1', '1*1 = 1'),
+			(' 1  * 1 ', ' 1  * 1 = 1 '),
+			('8 * 3', '8 * 3 = 24'),
+			('1/1', '1/1 = 1'),
+			('12 /3 ', '12 /3 = 4 '),
+			('10/4', '10/4 = 2.5'),
+			(' \t 40000 / 3', ' \t 40000 / 3 = 13333.33'),
+			('7 / 3', '7 / 3 = 2.33'),
+			('4/0', '4/~~0~~ = [DIVISION BY ZERO]'),
+			('*emphasis*!', '*emphasis*!'),
+			('this and/or that', 'this and/or that'),
 		):
 			res = parser.parse(data)
 			self.assertTrue(res, f'failed to parse `{data}`')
 			self.assertEqual(type(res), str)
 			self.assertEqual(
 				expectedOutput, res,
-				f'The data `{data}` was parsed into\n`{res}`,\nwhich does not match the regexp\n`{expectedOutput}`'
+				f'The data `{data}` was parsed into\n`{res}`,\nwhich is not the expected\n`{expectedOutput}`'
 			)
 
 	def test_parsingInputWithDiceCodes(self):
