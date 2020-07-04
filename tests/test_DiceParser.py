@@ -147,6 +147,12 @@ class TestLexer(unittest.TestCase):
 			(' /', 'DIVIDE'),
 			('/ ', 'DIVIDE'),
 			('  /  ', 'DIVIDE'),
+			('{', 'OPEN'),
+			(' [', 'OPEN'),
+			('( ', 'OPEN'),
+			(')', 'CLOSE'),
+			(' ]', 'CLOSE'),
+			('} ', 'CLOSE'),
 		):
 			lexer.input(text)
 			tok = lexer.token()

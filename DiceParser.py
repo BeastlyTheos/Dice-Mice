@@ -22,6 +22,8 @@ tokens = [
 	"MINUS",
 	"MULTIPLY",
 	"DIVIDE",
+	"OPEN",
+	"CLOSE",
 	"DIE",
 ]
 
@@ -30,6 +32,8 @@ t_PLUS = r'\s*\+\s*'
 t_MINUS = r'\s*-\s*'
 t_MULTIPLY = r'\s*\*\s*'
 t_DIVIDE = r'\s*/\s*'
+t_OPEN = r"\s*[{[(]\s*"
+t_CLOSE = r"\s*[)\]}]\s*"
 
 
 def t_NUMBER(t):
