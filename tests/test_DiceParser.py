@@ -164,37 +164,48 @@ class TestParser(unittest.TestCase):
 			numSides = int(data[1:])
 			self.assertTrue(1 <= int(res) <= numSides)
 
-	def test_parsing_matchesDesiredRegexp(self):
+	def test_parsingInputWithoutDiceCodes(self):
+		for data, expectedOutput in (
+			('Hello world', 'Hello world'),
+			('d0', 'd0'),
+			('Tries a trivial D0 roll', 'Tries a trivial D0 roll'),
+			('mixes textandrollsd8d', 'mixes textandrollsd8d'),
+			('0d0', '0d0'),
+			('1+1', '1+1 = 2'),
+			('\t2+8', '\t2+8 = 10'),
+			('98 +42+ 38', '98 +42+ 38 = 178'),
+			('1-1', '1-1 = 0'),
+			('4 -9', '4 -9 = -5'),
+			(' 18- 3', ' 18- 3 = 15'),
+			('stand-alone dash', 'stand-alone dash'),
+			('ctrl+alt-delete', 'ctrl+alt-delete'),
+			('4+8-3', '4+8-3 = 9'),
+			('4-8+3', '4-8+3 = -1'),
+		):
+			res = parser.parse(data)
+			self.assertTrue(res, f'failed to parse `{data}`')
+			self.assertEqual(type(res), str)
+			self.assertEqual(
+				expectedOutput, res,
+				f'The data `{data}` was parsed into\n`{res}`,\nwhich does not match the regexp\n`{expectedOutput}`'
+			)
+
+	def test_parsingInputWithDiceCodes(self):
 		for data, expectedRegexp in (
-			('Hello world', r'Hello world'),
 			('d20', r'\d{1,2}'),
 			(' d20', r' \d{1,2}'),
 			('d20 ', r'\d{1,2} '),
 			(' d20 ', r' \d{1,2} '),
 			('Hello D7 world', r'Hello \d world'),
 			('attacks for d20 then d8 damage.', r'attacks for \d{1,2} then \d damage.'),
-			('d0', r'd0'),
-			('Tries a trivial D0 roll', r'Tries a trivial D0 roll'),
-			('mixes textandrollsd8d', r'mixes textandrollsd8d'),
 			('d4then anotherd20 d4roll', r'\dthen anotherd20 \droll'),
 			('2d20', r'\[\d{1,2}, \d{1,2}\] = \d{1,2}'),
 			(' 49d20 ', r' \[\d{1,2}(, \d{1,2}){48}\] = \d{1,3} '),
 			('attacks for 0d20 then 1d8 damage.', r'attacks for \[] then \d damage.'),
-			('0d0', r'0d0'),
-			('1+1', r'1\+1 = 2'),
-			('\t2+8', r'\t2\+8 = 10'),
-			('98 +42+ 38', r'98 \+42\+ 38 = 178'),
-			('1-1', '1-1 = 0'),
-			('4 -9', '4 -9 = -5'),
-			(' 18- 3', ' 18- 3 = 15'),
 			('modify then subtract a roll 9-d8', r'modify then subtract a roll 9-\d = \d'),
 			('modify then subtract a roll 2-3d8', r'modify then subtract a roll 2-\[\d, \d, \d] = -\d{1,2}'),
-			('stand-alone dash', 'stand-alone dash'),
-			('ctrl+alt-delete', r'ctrl\+alt-delete'),
 			('trying to ne+gate -a roll -d4', r'trying to ne\+gate -a roll -\d'),
 			('rolling a negative number of times -2d8.', r'rolling a negative number of times -\[\d, \d] = \d{1,2}.'),
-			('4+8-3', r'4\+8-3 = 9'),
-			('4-8+3', r'4-8\+3 = -1'),
 			('d20adv', r'\[\d{1,2}, \d{1,2}\] = \d{1,2}'),
 			('d20dis', r'\[\d{1,2}, \d{1,2}\] = \d{1,2}'),
 			('3d6adv', r'\[\d(, \d){3}\] = \d{1,2}'),
