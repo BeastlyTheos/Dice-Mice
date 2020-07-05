@@ -97,7 +97,6 @@ def t_DIE(t):
 def t_error(t):
 	value = repr(t.value)
 	data = repr(t.lexer.lexdata)
-	print(f"Error tokenising {value} at position {t.lexpos} in {data}.")
 	log.error(f"Unable to tokenise {value} at position {t.lexpos} in {data}.")
 	t.lexer.skip(1)
 
@@ -115,6 +114,7 @@ precedence = (
 
 def p_expr2exprexpr(p):
 	'expr : expr expr %prec expr'
+	log.debug("Parsing expr concatination " + str(p[1:]))
 	p[0] = p[1] + p[2]
 
 
@@ -125,11 +125,13 @@ def p_expr2PLAINTEXT(p):
 	| MULTIPLY
 	| DIVIDE
 	'''
+	log.debug("Parsing elevation to expr " + str(p[1:]))
 	p[0] = p[1]
 
 
 def p_expr2numeric(p):
 	'expr : numeric %prec numeric'
+	log.debug("Parsing numeric to expr " + str(p[1:]))
 	text = p[1]['text']
 	if text.isdigit() or text == '[]':
 		p[0] = text
@@ -147,6 +149,7 @@ def p_expr2numeric(p):
 def p_numeric2PLUSMINUS(p):
 	'''numeric : numeric PLUS numeric
 	| numeric MINUS numeric'''
+	log.debug("Parsing PLUSMINUS " + str(p[1:]))
 	if '-' in p[2]:
 		p[3]['result'] *= -1
 	text = p[1]['text'] + p[2] + p[3]['text']
@@ -156,6 +159,7 @@ def p_numeric2PLUSMINUS(p):
 
 def p_numeric2MULTIPLY(p):
 	'numeric : numeric MULTIPLY numeric'
+	log.debug("Parsing multiply " + str(p[1:]))
 	text = p[1]['text'] + p[2] + p[3]['text']
 	result = p[1]['result'] * p[3]['result']
 	p[0] = dict(text=text, result=result)
@@ -163,6 +167,7 @@ def p_numeric2MULTIPLY(p):
 
 def p_numeric2DIVIDE(p):
 	'numeric : numeric DIVIDE numeric'
+	log.debug("Parsing divide " + str(p[1:]))
 	if p[3]['result']:
 		result = p[1]['result'] / p[3]['result']
 	else:
@@ -175,6 +180,7 @@ def p_numeric2DIVIDE(p):
 def p_numeric2UNARY_PLUSMINUS(p):
 	'''numeric : PLUS numeric
 	| MINUS numeric'''
+	log.debug("Parsing unary operator " + str(p[1:]))
 	text = p[1] + p[2]['text']
 	result = p[2]['result']
 	if '-' in p[1]:
@@ -184,6 +190,7 @@ def p_numeric2UNARY_PLUSMINUS(p):
 
 def p_numeric2NUMBER(p):
 	'numeric : NUMBER'
+	log.debug("Parsing number " + str(p[1:]))
 	result = p[1]
 	text = str(result)
 	p[0] = dict(text=text, result=result)
@@ -191,6 +198,7 @@ def p_numeric2NUMBER(p):
 
 def p_numeric2DIE(p):
 	'numeric : DIE'
+	log.debug("Parsing die " + str(p[1:]))
 	tok = p[1]
 	rolls = [randint(1, tok['numSides']) for i in range(tok['numDice'])]
 	text = str(rolls[0]) if len(rolls) == 1 else str(rolls)
@@ -207,14 +215,17 @@ def p_numeric2DIE(p):
 
 def p_expr2error(p):
 	'expr : error'
+	log.debug("Parsing error " + str(p[1:]))
 	p[0] = '**<ERROR>**'
 
 
 def p_error(p):
-	value = repr(p.value)
-	data = repr(p.lexer.lexdata)
-	print(f"Error parsing {p.type} token at position {p.lexpos} in {data}.")
-	log.error(f"Unable to parse the token {value} of type {p.type} at position {p.lexpos} in {data}.")
+	if p:
+		value = repr(p.value)
+		data = repr(p.lexer.lexdata)
+		log.error(f"Unable to parse the token {value} of type {p.type} at position {p.lexpos} in {data}.")
+	else:
+		log.error("Parser ran out of tokens to parse.")
 
 
 parser = yacc.yacc()
