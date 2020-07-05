@@ -104,11 +104,11 @@ def t_error(t):
 lexer = lex.lex(reflags=lexerRegexFlags)
 
 precedence = (
-	('left', 'expr'),
-	('left', 'PLAINTEXT'),
-	('left', 'numeric'),
+	('left', 'expr', 'OPEN', 'CLOSE'),
 	('left', 'PLUS', 'MINUS'),
 	('left', 'MULTIPLY', 'DIVIDE'),
+	('left', 'brackets', 'UNARY'),
+	('left', 'DIE', 'NUMBER'),
 )
 
 
@@ -132,7 +132,7 @@ def p_expr2PLAINTEXT(p):
 
 
 def p_expr2numeric(p):
-	'expr : numeric %prec numeric'
+	'expr : numeric %prec expr'
 	log.debug("Parsing numeric to expr " + str(p[1:]))
 	text = p[1]['text']
 	if text.isdigit() or text == '[]':
@@ -181,7 +181,7 @@ def p_numeric2DIVIDE(p):
 
 def p_numeric2UNARY_PLUSMINUS(p):
 	'''numeric : PLUS numeric
-	| MINUS numeric'''
+	| MINUS numeric %prec UNARY'''
 	log.debug("Parsing unary operator " + str(p[1:]))
 	text = p[1] + p[2]['text']
 	result = p[2]['result']
@@ -199,7 +199,7 @@ def p_numeric2NUMBER(p):
 
 
 def p_numeric2brackets(p):
-	'numeric : OPEN numeric CLOSE'
+	'numeric : OPEN numeric CLOSE %prec brackets'
 	log.debug("Parsing brackets " + str(p[1:]))
 	text = p[1] + p[2]['text'] + p[3]
 	p[0] = dict(text=text, result=p[2]['result'])
