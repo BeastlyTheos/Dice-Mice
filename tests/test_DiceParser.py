@@ -5,8 +5,9 @@ from DiceParser import (
 	lexer, parser,
 	HIGHEST, LOWEST,
 	p_expr2numeric,
-	p_numeric2DIE,
 	p_numeric2PLUSMINUS,
+	p_numeric2brackets,
+	p_numeric2DIE,
 )
 
 
@@ -206,6 +207,13 @@ class TestParser(unittest.TestCase):
 			('5/-2', '5/-2 = -2.5'),
 			('5/-3.75', '5/-3.75 = -1.33'),
 			('-13/-7', '-13/-7 = -1.86'),
+			('1*(1*1)', '1*(1*1) = 1'),
+			('3*(2+4)', '3*(2+4) = 18'),
+			('3+(2/4)', '3+(2/4) = 3.5'),
+			('60/(2+8*0.5)/5', '60/(2+8*0.5)/5 = 2'),
+			('(8-3)/2', '(8-3)/2 = 2.5'),
+			('(8-3 ) / 2', '(8-3 ) / 2 = 2.5'),
+			('8 - 3 ) / 2', '8 - 3 = 5 ) / 2'),
 		):
 			res = parser.parse(data)
 			self.assertTrue(res, f'failed to parse `{data}`')
@@ -214,6 +222,16 @@ class TestParser(unittest.TestCase):
 				expectedOutput, res,
 				f'The data `{data}` was parsed into\n`{res}`,\nwhich is not the expected\n`{expectedOutput}`'
 			)
+
+	def test_WhenParserErrors_thenFailsGracefully(self):
+		for text in (
+			('(8-3  / 2'),
+			('(8-3  after) / 2'),
+			('(8-3  / 2 after'),
+		):
+			res = parser.parse(text)
+			if type(res) == str:
+				self.assertIn("**<ERROR>**", res)
 
 	def test_parsingInputWithDiceCodes(self):
 		for data, expectedRegexp in (
@@ -289,6 +307,29 @@ class TestParseFunctions(unittest.TestCase):
 			p_numeric2PLUSMINUS(p)
 			self.assertEqual(p[0]['result'], prev['result'] + next['result'])
 			self.assertEqual(p[0]['text'], prev['text'] + cur + next['text'])
+
+	def test_numeric2brackets(self):
+		for prev, cur, next in (
+			(
+				'(',
+				dict(text='2', result=1),
+				')',
+			),
+			(
+				'[ ',
+				dict(text=' 94.5\t', result=94.5),
+				'   ]',
+			),
+			(
+				' {',
+				dict(text='[11, 5]', result=16),
+				' } ',
+			),
+		):
+			p = [None, prev, cur, next]
+			p_numeric2brackets(p)
+			self.assertEqual(p[0]['result'], cur['result'])
+			self.assertEqual(p[0]['text'], prev + cur['text'] + next)
 
 	def test_numeric2DIE(self):
 		for token in (

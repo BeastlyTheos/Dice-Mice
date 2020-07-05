@@ -124,6 +124,8 @@ def p_expr2PLAINTEXT(p):
 	| MINUS
 	| MULTIPLY
 	| DIVIDE
+	| OPEN
+	| CLOSE %prec expr
 	'''
 	log.debug("Parsing elevation to expr " + str(p[1:]))
 	p[0] = p[1]
@@ -194,6 +196,13 @@ def p_numeric2NUMBER(p):
 	result = p[1]
 	text = str(result)
 	p[0] = dict(text=text, result=result)
+
+
+def p_numeric2brackets(p):
+	'numeric : OPEN numeric CLOSE'
+	log.debug("Parsing brackets " + str(p[1:]))
+	text = p[1] + p[2]['text'] + p[3]
+	p[0] = dict(text=text, result=p[2]['result'])
 
 
 def p_numeric2DIE(p):
