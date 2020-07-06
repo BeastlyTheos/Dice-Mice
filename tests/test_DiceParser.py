@@ -223,6 +223,30 @@ class TestParser(unittest.TestCase):
 				f'The data `{data}` was parsed into\n`{res}`,\nwhich is not the expected\n`{expectedOutput}`'
 			)
 
+	def test_whenParsingMath_expressionsAreAccuratelyEvaluated(self):
+		for text, expectedResult in (
+			('3-5', ' = -2'),
+			('(3-5)', ' = -2'),
+			('(3-5)/2', ' = -1'),
+			('2+(3-5)/2', ' = 1'),
+			('(3-5)/2+9', ' = 8'),
+			('2+(3-5)/2+9', ' = 10'),
+			('(2+(3-5)/2+9)', ' = 10'),
+			('3*(2+(3-5)/2+9)', ' = 30'),
+			('3*(2+(-2)/2+9)', ' = 30'),
+			('3*(2+-2/2+9)', ' = 30'),
+			('3*(2+-1+9)', ' = 30'),
+			('3*(2++8)', ' = 30'),
+			('3*(10)', ' = 30'),
+		):
+			res = parser.parse(text)
+			self.assertTrue(res, f'failed to parse `{text}`')
+			self.assertEqual(type(res), str)
+			self.assertEqual(
+				res, text + expectedResult,
+				f'The text `{text}` was parsed into\n`{res}`,\nwhich is not the expected\n`{expectedResult}`'
+			)
+
 	def test_WhenParserErrors_thenFailsGracefully(self):
 		for text in (
 			('(8-3  / 2'),
