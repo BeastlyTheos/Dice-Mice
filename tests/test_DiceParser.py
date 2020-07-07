@@ -5,8 +5,9 @@ from DiceParser import (
 	lexer, parser,
 	HIGHEST, LOWEST,
 	p_expr2numeric,
-	p_numeric2DIE,
 	p_numeric2PLUSMINUS,
+	p_numeric2brackets,
+	p_numeric2DIE,
 )
 
 
@@ -118,25 +119,45 @@ class TestLexer(unittest.TestCase):
 			self.assertEqual(plaintext, expectedPlaintext)
 
 	def test_numericTokens(self):
-		for text, value, type in (
-			('0', 0, 'NUMBER'),
-			('4', 4, 'NUMBER'),
-			('92', 92, 'NUMBER'),
-			('00', 0, 'NUMBER'),
-			('04', 4, 'NUMBER'),
-			('8.4', 8.4, 'NUMBER'),
-			('9.223', 9.223, 'NUMBER'),
-			('+', '+', 'PLUS'),
-			(' +', ' +', 'PLUS'),
-			(' +\t', ' +\t', 'PLUS'),
-			('-', '-', 'MINUS'),
-			(' - ', ' - ', 'MINUS'),
-			(' -', ' -', 'MINUS'),
+		for text, value in (
+			('0', 0),
+			('4', 4),
+			('92', 92),
+			('00', 0),
+			('04', 4),
+			('8.4', 8.4),
+			('9.223', 9.223),
+		):
+			lexer.input(text)
+			tok = lexer.token()
+			self.assertEqual(tok.value, value, f"text is `{text}`")
+
+	def test_operandTokens(self):
+		for text, type in (
+			('+', 'PLUS'),
+			(' +', 'PLUS'),
+			(' +\t', 'PLUS'),
+			('-', 'MINUS'),
+			(' - ', 'MINUS'),
+			(' -', 'MINUS'),
+			('*', 'MULTIPLY'),
+			(' *', 'MULTIPLY'),
+			('* ', 'MULTIPLY'),
+			('  *  ', 'MULTIPLY'),
+			('/', 'DIVIDE'),
+			(' /', 'DIVIDE'),
+			('/ ', 'DIVIDE'),
+			('  /  ', 'DIVIDE'),
+			('{', 'OPEN'),
+			(' [', 'OPEN'),
+			('( ', 'OPEN'),
+			(')', 'CLOSE'),
+			(' ]', 'CLOSE'),
+			('} ', 'CLOSE'),
 		):
 			lexer.input(text)
 			tok = lexer.token()
 			self.assertEqual(tok.type, type, f"text is `{text}`")
-			self.assertEqual(tok.value, value, f"text is `{text}`")
 
 
 class TestParser(unittest.TestCase):
@@ -150,37 +171,108 @@ class TestParser(unittest.TestCase):
 			numSides = int(data[1:])
 			self.assertTrue(1 <= int(res) <= numSides)
 
-	def test_parsing_matchesDesiredRegexp(self):
+	def test_parsingInputWithoutDiceCodes(self):
+		for data, expectedOutput in (
+			('Hello world', 'Hello world'),
+			('d0', 'd0'),
+			('Tries a trivial D0 roll', 'Tries a trivial D0 roll'),
+			('mixes textandrollsd8d', 'mixes textandrollsd8d'),
+			('0d0', '0d0'),
+			('1+1', '1+1 = 2'),
+			('\t2+8', '\t2+8 = 10'),
+			('98 +42+ 38', '98 +42+ 38 = 178'),
+			('1-1', '1-1 = 0'),
+			('4 -9', '4 -9 = -5'),
+			(' 18- 3', ' 18- 3 = 15'),
+			('stand-alone dash', 'stand-alone dash'),
+			('ctrl+alt-delete', 'ctrl+alt-delete'),
+			('4+8-3', '4+8-3 = 9'),
+			('4-8+3', '4-8+3 = -1'),
+			('1*1', '1*1 = 1'),
+			(' 1  * 1 ', ' 1  * 1 = 1 '),
+			('8 * 3', '8 * 3 = 24'),
+			('1/1', '1/1 = 1'),
+			('12 /3 ', '12 /3 = 4 '),
+			('10/4', '10/4 = 2.5'),
+			(' \t 40000 / 3', ' \t 40000 / 3 = 13333.33'),
+			('7 / 3', '7 / 3 = 2.33'),
+			('4/0', '4/~~0~~ = [DIVISION BY ZERO]'),
+			('*emphasis*!', '*emphasis*!'),
+			('this and/or that', 'this and/or that'),
+			('1+-3', '1+-3 = -2'),
+			('4++-+8 --- 1', '4++-+8 --- 1 = -5'),
+			('8/-2', '8/-2 = -4'),
+			('-2*-3', '-2*-3 = 6'),
+			('2*-3', '2*-3 = -6'),
+			('5/-2', '5/-2 = -2.5'),
+			('5/-3.75', '5/-3.75 = -1.33'),
+			('-13/-7', '-13/-7 = 1.86'),
+			('1*(1*1)', '1*(1*1) = 1'),
+			('3*(2+4)', '3*(2+4) = 18'),
+			('3+(2/4)', '3+(2/4) = 3.5'),
+			('60/(2+8*0.5)/5', '60/(2+8*0.5)/5 = 2'),
+			('(8-3)/2', '(8-3)/2 = 2.5'),
+			('(8-3 ) / 2', '(8-3 ) / 2 = 2.5'),
+			('8 - 3 ) / 2', '8 - 3 = 5 ) / 2'),
+		):
+			res = parser.parse(data)
+			self.assertTrue(res, f'failed to parse `{data}`')
+			self.assertEqual(type(res), str)
+			self.assertEqual(
+				expectedOutput, res,
+				f'The data `{data}` was parsed into\n`{res}`,\nwhich is not the expected\n`{expectedOutput}`'
+			)
+
+	def test_whenParsingMath_expressionsAreAccuratelyEvaluated(self):
+		for text, expectedResult in (
+			('3-5', ' = -2'),
+			('(3-5)', ' = -2'),
+			('(3-5)/2', ' = -1'),
+			('2+(3-5)/2', ' = 1'),
+			('(3-5)/2+9', ' = 8'),
+			('2+(3-5)/2+9', ' = 10'),
+			('(2+(3-5)/2+9)', ' = 10'),
+			('3*(2+(3-5)/2+9)', ' = 30'),
+			('3*(2+(-2)/2+9)', ' = 30'),
+			('3*(2+-2/2+9)', ' = 30'),
+			('3*(2+-1+9)', ' = 30'),
+			('3*(2++8)', ' = 30'),
+			('3*(10)', ' = 30'),
+		):
+			res = parser.parse(text)
+			self.assertTrue(res, f'failed to parse `{text}`')
+			self.assertEqual(type(res), str)
+			self.assertEqual(
+				res, text + expectedResult,
+				f'The text `{text}` was parsed into\n`{res}`,\nwhich is not the expected\n`{expectedResult}`'
+			)
+
+	def test_WhenParserErrors_thenFailsGracefully(self):
+		for text in (
+			('(8-3  / 2'),
+			('(8-3  after) / 2'),
+			('(8-3  / 2 after'),
+		):
+			res = parser.parse(text)
+			if type(res) == str:
+				self.assertIn("**<ERROR>**", res)
+
+	def test_parsingInputWithDiceCodes(self):
 		for data, expectedRegexp in (
-			('Hello world', r'Hello world'),
 			('d20', r'\d{1,2}'),
 			(' d20', r' \d{1,2}'),
 			('d20 ', r'\d{1,2} '),
 			(' d20 ', r' \d{1,2} '),
 			('Hello D7 world', r'Hello \d world'),
 			('attacks for d20 then d8 damage.', r'attacks for \d{1,2} then \d damage.'),
-			('d0', r'd0'),
-			('Tries a trivial D0 roll', r'Tries a trivial D0 roll'),
-			('mixes textandrollsd8d', r'mixes textandrollsd8d'),
 			('d4then anotherd20 d4roll', r'\dthen anotherd20 \droll'),
 			('2d20', r'\[\d{1,2}, \d{1,2}\] = \d{1,2}'),
 			(' 49d20 ', r' \[\d{1,2}(, \d{1,2}){48}\] = \d{1,3} '),
 			('attacks for 0d20 then 1d8 damage.', r'attacks for \[] then \d damage.'),
-			('0d0', r'0d0'),
-			('1+1', r'1\+1 = 2'),
-			('\t2+8', r'\t2\+8 = 10'),
-			('98 +42+ 38', r'98 \+42\+ 38 = 178'),
-			('1-1', '1-1 = 0'),
-			('4 -9', '4 -9 = -5'),
-			(' 18- 3', ' 18- 3 = 15'),
 			('modify then subtract a roll 9-d8', r'modify then subtract a roll 9-\d = \d'),
 			('modify then subtract a roll 2-3d8', r'modify then subtract a roll 2-\[\d, \d, \d] = -\d{1,2}'),
-			('stand-alone dash', 'stand-alone dash'),
-			('ctrl+alt-delete', r'ctrl\+alt-delete'),
 			('trying to ne+gate -a roll -d4', r'trying to ne\+gate -a roll -\d'),
-			('rolling a negative number of times -2d8.', r'rolling a negative number of times -\[\d, \d] = \d{1,2}.'),
-			('4+8-3', r'4\+8-3 = 9'),
-			('4-8+3', r'4-8\+3 = -1'),
+			('rolling a negative number of times -2d8.', r'rolling a negative number of times -\[\d, \d] = -\d{1,2}.'),
 			('d20adv', r'\[\d{1,2}, \d{1,2}\] = \d{1,2}'),
 			('d20dis', r'\[\d{1,2}, \d{1,2}\] = \d{1,2}'),
 			('3d6adv', r'\[\d(, \d){3}\] = \d{1,2}'),
@@ -239,6 +331,29 @@ class TestParseFunctions(unittest.TestCase):
 			p_numeric2PLUSMINUS(p)
 			self.assertEqual(p[0]['result'], prev['result'] + next['result'])
 			self.assertEqual(p[0]['text'], prev['text'] + cur + next['text'])
+
+	def test_numeric2brackets(self):
+		for prev, cur, next in (
+			(
+				'(',
+				dict(text='2', result=1),
+				')',
+			),
+			(
+				'[ ',
+				dict(text=' 94.5\t', result=94.5),
+				'   ]',
+			),
+			(
+				' {',
+				dict(text='[11, 5]', result=16),
+				' } ',
+			),
+		):
+			p = [None, prev, cur, next]
+			p_numeric2brackets(p)
+			self.assertEqual(p[0]['result'], cur['result'])
+			self.assertEqual(p[0]['text'], prev + cur['text'] + next)
 
 	def test_numeric2DIE(self):
 		for token in (
