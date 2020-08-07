@@ -7,8 +7,9 @@
 import logging
 from math import isnan, nan
 from ply import lex, yacc
-from random import randint
+from random import randint as rand
 import re
+currentName = ""
 
 log = logging.getLogger("parser")
 
@@ -220,6 +221,12 @@ def p_numeric2DIE(p):
 		max = tok['rangeSize']
 	result = sum(rolls[min: max])
 	p[0] = dict(result=result, text=text)
+
+
+def randint(low, high):
+	res = rand(low, high)
+	log.info(f"{currentName} rolled {res}/{high}")
+	return res
 
 
 def p_expr2error(p):

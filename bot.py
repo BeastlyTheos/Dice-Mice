@@ -11,6 +11,7 @@ from sys import stdout
 
 from db.models import Alias
 from DiceParser import parser, lexerRegexFlags, t_DIE
+import DiceParser
 diceRegex = re.compile(t_DIE.__doc__, flags=lexerRegexFlags)
 
 argparser = argparse.ArgumentParser()
@@ -52,6 +53,7 @@ async def on_message(msg):
 		if msg.author == client.user:
 			return "own message"
 		log.info(f"Received {msg.content=} from {msg.author.display_name}")
+		DiceParser.currentName = msg.author.display_name
 		if msg.content.startswith("!"):
 			command = msg.content[1:]
 			reply = handleCommand(msg, command)
