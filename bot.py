@@ -12,7 +12,14 @@ from sys import stdout
 from db.models import Alias
 from DiceParser import parser, lexerRegexFlags, t_DIE
 import DiceParser
+
 diceRegex = re.compile(t_DIE.__doc__, flags=lexerRegexFlags)
+aliasRegex = re.compile(r'\s*(?P<name>\w+)?\s*(?P<equals>=)?\s*(?P<definition>.*)')
+GUILD_GREETING = """
+I am your dice mice, ready to roll.
+Just type your dice codes, and I'll echo your message back with the dice already rolled.
+For more help, check out https://github.com/BeastlyTheos//Dice-Mice
+"""
 
 argparser = argparse.ArgumentParser()
 argparser.add_argument(
@@ -39,12 +46,23 @@ client = discord.Client()
 engine = create_engine('sqlite:///db/db.sqlite3')
 Session = sessionmaker(bind=engine)
 
-aliasRegex = re.compile(r'\s*(?P<name>\w+)?\s*(?P<equals>=)?\s*(?P<definition>.*)')
-
 
 @client.event
 async def on_ready():
 	print("connected.")
+
+
+@client.event
+async def on_guild_join(guild):
+	log.info(f"joinned {guild.name=}")
+	channel = guild.system_channel
+	if channel:
+		log.debug("has system channel")
+	else:
+		log.debug("does not have system channel")
+		channel = guild.text_channels[0]
+	await channel.send(GUILD_GREETING)
+	log.info(f"sent greeting to {channel.name=}")
 
 
 @client.event
