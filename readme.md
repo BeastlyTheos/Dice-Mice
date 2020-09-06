@@ -10,8 +10,8 @@
 4. Your dice mice should arrive in your server shortly, ready to roll.
 
 ## Examples:
-* Simply write standard RPG dice codes within your discord messages, and let the dice mice do the rest.
-*
+Simply write standard RPG dice codes within your discord messages, and let the dice mice do the rest.
+
   * Theo types, "Attack the goblin for d20+5".
   * Dice Mice types, "Theo -- Attack the goblin for [18]+5 = 23".
 *
@@ -33,16 +33,32 @@
   * Cass types, "rolls 3d6adv to determine her strength ability."
   * Dice Mice types, "Cass -- rolls [4, 6, 1, 2] = 13 to determine her strength ability."
 
+### Make rolling easier with aliases
+Store commonly repeated rolls as aliases, then invoke the alias later by putting an exclaimation mark '!' before the alias name.
+* create an alias
+  * !alias stat = 4d6kh3
+  * !alias att=does a d20+6 attack with his sword.
+  * !alias axe = hits with his axe for d10+4 damage!
+* view all aliases
+  * !alias
+  * Theos has the following aliases defined:  
+  att = does a d20+6 attack with his sword.  
+  axe = hits with his axe for d10+4 damage!  
+  stat = 4d6kh3  
+* execute an alias
+  * !axe  
+  Theos -- hits with his axe for [8]+4 = 12 damage!
+  * !att  
+  does a [17]+6 = 23 attack with his sword.
+
 ## syntax
-dice codes have the syntax `[<num dice>]d<num sides>[<modifier>]`.
+dice codes have the syntax `[<num dice>]d<num sides>[<keep/drop modifier>]`.
 - num dice (optional) is the number of dice to roll, and must be non-negative.
 - num sides is the number of sides the dice should have, and must be a positive number. E.G. d6 is a six-sided die, and d12 is a 12-sided die.
-- modifier (optional) is a code of the form [k|d][h|l]<num>, where the first letter indicates whether to keep or drop, the second letter indicates whether the highest or lowest dice will be kep/dropped, and the num is the number of dice kept/dropped.
+- keep/drop modifier (optional) is a code of the form [k|d][h|l]<num>, where the first letter indicates whether to keep or drop, the second letter indicates whether the highest or lowest dice will be kep/dropped, and the num is the number of dice kept/dropped.
 - Alternatively, the modifier can be "adv" or "dis" to roll with advantage or disadvantage.
 
 ## Upcoming Features
-*  user-defined macros
 *  feature to repeat recent commands
 *  optionally printout details about how the message was parsed to assist in debugging and learning syntax
-*  syntax for repeating a set of rolls
-*  evaluate multiplication and division
+*  syntax for repeating a given roll multiple times in a single message
