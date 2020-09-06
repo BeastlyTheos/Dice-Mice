@@ -211,6 +211,16 @@ class Test_handleAlias(unittest.TestCase):
 			self.assertEqual(reply.split("\n")[0], expectedHeader)
 			self.assertListEqual(aliases, expectedAliases)
 
+	def test_whenNoArgumentsGiven_andNoAliasesDefined_thenPrintUserHasNoAliases(self):
+		msg = Mock()
+		msg.author.id = 21027
+		msg.author.display_name = "Dymorius"
+		expectedOutput = f'{msg.author.display_name} has no aliases defined.'
+
+		reply = handleAlias(msg, "")
+
+		self.assertTrue(reply.startswith(expectedOutput), f"{reply=} does not start with {expectedOutput=}")
+
 	def test_whenCommandIsAnAlias_thenParseDefinition(self):
 		msg = Mock()
 		session = bot.Session()

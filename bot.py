@@ -118,10 +118,14 @@ def handleAlias(msg, args):
 	log.debug(f"Alias command called with {name=}, {isDefining=}, {definition=}")
 	session = Session()
 	if not name:
-		reply = [f"{msg.author.display_name} has the following aliases defined:"]
-		for alias in session.query(Alias).filter_by(user=msg.author.id):
-			reply.append(f"{alias.name} = {alias.definition}")
-		reply = "\n".join(reply)
+		aliases = session.query(Alias).filter_by(user=msg.author.id)
+		if aliases.count():
+			reply = [f"{msg.author.display_name} has the following aliases defined:"]
+			for alias in aliases:
+				reply.append(f"{alias.name} = {alias.definition}")
+			reply = "\n".join(reply)
+		else:
+			reply = f'{msg.author.display_name} has no aliases defined. Type "!alias <shorthand>=<text>" to define an alias.'
 	elif not isDefining:
 		res = session.query(Alias).filter_by(user=msg.author.id, name=name)
 		if res.count():
