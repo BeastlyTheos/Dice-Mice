@@ -88,8 +88,12 @@ class Test_on_message(unittest.TestCase):
 	def test_ifTimelimitExceeded_whileProcessingMessage_thenAbortMessage(self):
 		msg = AsyncMock()
 		msg.content = "1000000d1000000h1"
-		with self.assertRaises(ParserTimeoutError):
-			run(on_message(msg))
+		msg.channel.send = AsyncMock()
+		msg.author.display_name = "bert"
+		with self.assertLogs("main", logging.WARNING):
+			with self.assertRaises(ParserTimeoutError):
+				run(on_message(msg))
+		msg.channel.send.assert_called()
 
 
 class Test_handleCommand(unittest.TestCase):

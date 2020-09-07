@@ -99,6 +99,12 @@ async def on_message(msg):
 		if reply:
 			await msg.channel.send(reply)
 	except ParserTimeoutError as e:
+		await msg.channel.send(
+			f"{msg.author.display_name} -- Sorry. Those dice rolls are too big and complex for our little mice hands"
+		)
+		log.warning(
+			f"{repr(e)} when handling on_message event with content {repr(msg.content)} from {msg.author.display_name}."
+		)
 		raise e
 	except Exception as e:
 		log.error(
@@ -106,7 +112,6 @@ async def on_message(msg):
 		)
 	finally:
 		timer.cancel()
-		client.loop.close()
 
 
 def handleCommand(msg, command):
