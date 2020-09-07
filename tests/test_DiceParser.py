@@ -8,7 +8,9 @@ from DiceParser import (
 	p_numeric2PLUSMINUS,
 	p_numeric2brackets,
 	p_numeric2DIE,
+	ParserTimeoutError,
 )
+import DiceParser
 
 
 class TestLexer(unittest.TestCase):
@@ -284,6 +286,15 @@ class TestParser(unittest.TestCase):
 				re.match(expectedRegexp, res),
 				f'The data `{data}` was parsed into\n`{res}`,\nwhich does not match the regexp\n`{expectedRegexp}`'
 			)
+
+	def test_ifTimelimitExceeded_whileParsing_thenAbortParsing(self):
+		old_MAX = DiceParser.MAX_EXECUTION_SECONDS
+		DiceParser.MAX_EXECUTION_SECONDS = 0
+		content = "1000000d1000000h1"
+		content = "d1000000h1"
+		with self.assertRaises(ParserTimeoutError):
+			parser.parse(content)
+		DiceParser.MAX_EXECUTION_SECONDS = old_MAX
 
 
 class TestParseFunctions(unittest.TestCase):

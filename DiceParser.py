@@ -7,9 +7,13 @@
 import logging
 from math import isnan, nan
 from ply import lex, yacc
+from signal import raise_signal, SIGABRT, signal
 from random import randint as rand
 import re
+import threading
+
 currentName = ""
+MAX_EXECUTION_SECONDS = 2
 
 log = logging.getLogger("parser")
 
@@ -244,4 +248,24 @@ def p_error(p):
 		log.error("Parser ran out of tokens to parse.")
 
 
+class ParserTimeoutError(Exception):
+	pass
+
+
+def SIGABRT_handler(*args, **kwargs):
+	raise ParserTimeoutError(f"Exceeded maximum execution time for parsing of {MAX_EXECUTION_SECONDS} seconds.")
+
+
+def timedParse(*args, **kwargs):
+	timer = threading.Timer(MAX_EXECUTION_SECONDS, raise_signal, args=(SIGABRT,))
+	timer.start()
+	try:
+		return original_parser(*args, **kwargs)
+	finally:
+		timer.cancel()
+
+
 parser = yacc.yacc()
+original_parser = parser.parse
+parser.parse = timedParse
+signal(SIGABRT, SIGABRT_handler)

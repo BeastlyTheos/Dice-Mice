@@ -5,14 +5,12 @@ from dotenv import load_dotenv
 import logging
 import os
 import re
-from signal import raise_signal, SIGABRT, signal
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
 from sys import stdout
-import threading
 
 from db.models import Alias
-from DiceParser import parser, lexerRegexFlags, t_DIE
+from DiceParser import parser, ParserTimeoutError, lexerRegexFlags, t_DIE
 import DiceParser
 
 diceRegex = re.compile(t_DIE.__doc__, flags=lexerRegexFlags)
@@ -49,17 +47,6 @@ engine = create_engine('sqlite:///db/db.sqlite3')
 Session = sessionmaker(bind=engine)
 
 
-class ParserTimeoutError(Exception):
-	pass
-
-
-def SIGABRT_handler(*args, **kwargs):
-	raise ParserTimeoutError("timed test")
-
-
-signal(SIGABRT, SIGABRT_handler)
-
-
 @client.event
 async def on_ready():
 	print("connected.")
@@ -80,8 +67,6 @@ async def on_guild_join(guild):
 
 @client.event
 async def on_message(msg):
-	timer = threading.Timer(0.5, raise_signal, args=(SIGABRT,))
-	timer.start()
 	try:
 		if msg.author == client.user:
 			return "own message"
@@ -110,8 +95,6 @@ async def on_message(msg):
 		log.error(
 			f"{repr(e)} when handling on_message event with content {repr(msg.content)} from {msg.author.display_name}."
 		)
-	finally:
-		timer.cancel()
 
 
 def handleCommand(msg, command):
