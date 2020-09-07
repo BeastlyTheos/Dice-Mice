@@ -11,6 +11,7 @@ from bot import (
 	on_guild_join,
 	GUILD_GREETING,
 	on_message,
+	ParserTimeoutError,
 	COMMANDS,
 	handleCommand,
 	parseCommand,
@@ -83,6 +84,12 @@ class Test_on_message(unittest.TestCase):
 	def test_logsError_whenRaisingException(self):
 		with self.assertLogs("main", logging.ERROR):
 			run(on_message(Mock(side_effect=Exception("test exception"))))
+
+	def test_ifTimelimitExceeded_whileProcessingMessage_thenAbortMessage(self):
+		msg = AsyncMock()
+		msg.content = "1000000d1000000h1"
+		with self.assertRaises(ParserTimeoutError):
+			run(on_message(msg))
 
 
 class Test_handleCommand(unittest.TestCase):
