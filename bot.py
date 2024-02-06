@@ -72,17 +72,11 @@ async def on_message(msg):
 			return "own message"
 		log.info(f"Received {msg.content=} from {msg.author.display_name}")
 		DiceParser.currentName = msg.author.display_name
-		if msg.content.startswith("!"):
-			command = msg.content[1:]
-			reply = handleCommand(msg, command)
-		elif diceRegex.search(msg.content):
-			res = parser.parse(msg.content)
-			reply = f"{msg.author.display_name} -- {res}"
-		else:
-			return "no dice"
-
+		reply = handleInput(msg.author, msg.content)
 		if reply:
 			await msg.channel.send(reply)
+		else:
+			return "no dice"
 	except ParserTimeoutError as e:
 		await msg.channel.send(
 			f"{msg.author.display_name} -- Sorry. Those dice rolls are too big and complex for our little mice hands"
@@ -95,6 +89,15 @@ async def on_message(msg):
 		log.error(
 			f"{repr(e)} when handling on_message event with content {repr(msg.content)} from {msg.author.display_name}."
 		)
+
+
+def handleInput(author, text):
+	if text.startswith("!"):
+		command = text[1:]
+		return handleCommand(text, command)
+	elif diceRegex.search(text):
+		res = parser.parse(text)
+		return f"{author.display_name} -- {res}"
 
 
 def handleCommand(msg, command):
