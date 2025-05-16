@@ -36,7 +36,9 @@ log.addHandler(logging.StreamHandler(stdout))
 
 load_dotenv()
 TOKEN = os.getenv("DISCORD_TOKEN")
-client = discord.Client()
+intents = discord.Intents.default()
+intents.message_content = True
+client = discord.Client(intents=intents)
 
 
 @client.event
@@ -60,8 +62,8 @@ async def on_guild_join(guild):
 @client.event
 async def on_message(msg):
 	try:
-		if msg.author == client.user:
-			return "own message"
+		if msg.author.bot:
+			return "bot message"
 		log.info(f"Received {msg.content=} from {msg.author.display_name}")
 		DiceParser.currentName = msg.author.display_name
 		reply = handleInput(msg.author, msg.content)

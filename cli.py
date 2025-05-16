@@ -31,6 +31,9 @@ logging.basicConfig(
 log = logging.getLogger("main")
 
 if __name__ == '__main__':
-	print("GREETING")
-	while True:
-		print(handleInput(author, input()))
+	try:
+		print(GREETING)
+		while True:
+			print(handleInput(author, input()))
+	except KeyboardInterrupt:
+		print("Goodbye")
